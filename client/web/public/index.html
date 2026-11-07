@@ -3,21 +3,17 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>GALAXY IMPÉRIOS — Ascensão das Civilizações (Estilo Galaxy Life)</title>
+  <title>STAR WARS: GALACTIC BATTLEGROUNDS — IMPÉRIOS</title>
   <style>
     :root {
-      --space-bg: #090b14;
-      --gl-gold: #ffc400;
-      --gl-gold-dark: #b87a00;
-      --gl-orange: #ff7b00;
-      --gl-cyan: #00e5ff;
-      --gl-cyan-dark: #0088a3;
-      --gl-purple: #a855f7;
-      --gl-green: #22c55e;
-      --gl-red: #ef4444;
-      --gl-panel: rgba(18, 24, 38, 0.94);
-      --gl-border: #3b4b68;
-      --gl-border-glow: #00e5ff;
+      --hud-gold: #c69224;
+      --hud-gold-bright: #ffd452;
+      --hud-gold-dark: #634305;
+      --hud-panel-bg: #110e08;
+      --hud-border: #4d3810;
+      --sw-green: #22c55e;
+      --sw-red: #ef4444;
+      --sw-blue: #38bdf8;
     }
 
     * {
@@ -26,14 +22,14 @@
       padding: 0;
       user-select: none;
       -webkit-user-select: none;
-      font-family: 'Segoe UI', system-ui, -apple-system, Roboto, sans-serif;
+      font-family: 'Segoe UI', Arial, sans-serif;
     }
 
     body, html {
       width: 100%;
       height: 100%;
       overflow: hidden;
-      background: radial-gradient(circle at center, #16112c 0%, #080a14 100%);
+      background-color: #000;
       color: #fff;
     }
 
@@ -51,661 +47,486 @@
       width: 100%;
       height: 100%;
       touch-action: none;
-      cursor: grab;
-    }
-    canvas#isometric-canvas:active {
-      cursor: grabbing;
+      cursor: crosshair;
     }
 
     /* ============================================================
-       TOP HUD: GALAXY LIFE SIGNATURE CAPSULES & STAR LEVEL
+       TOP HEADER: TECH LEVEL & STAR WARS GALACTIC RESOURCES
        ============================================================ */
-    .gl-top-hud {
+    .swgb-top-bar {
       position: absolute;
-      top: 10px;
-      left: 12px;
-      right: 12px;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      pointer-events: none;
-      z-index: 100;
-      gap: 10px;
-    }
-
-    /* Player Profile & Level Star */
-    .gl-player-card {
-      pointer-events: auto;
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      background: var(--gl-panel);
-      padding: 6px 14px 6px 8px;
-      border-radius: 40px;
-      border: 2px solid var(--gl-border);
-      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.6);
-    }
-
-    .gl-star-badge {
-      width: 44px;
+      top: 0;
+      left: 0;
+      width: 100%;
       height: 44px;
-      background: linear-gradient(135deg, #ffe066 0%, #f59e0b 100%);
-      border-radius: 50%;
+      background: linear-gradient(180deg, #181308 0%, #0d0a04 100%);
+      border-bottom: 2px solid var(--hud-gold-dark);
       display: flex;
-      flex-direction: column;
       align-items: center;
-      justify-content: center;
-      border: 3px solid #fff;
-      box-shadow: 0 0 12px rgba(245, 158, 11, 0.8);
-      color: #78350f;
-      font-weight: 900;
-      font-size: 14px;
-      line-height: 1;
+      justify-content: space-between;
+      padding: 0 16px;
+      z-index: 100;
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.85);
     }
-    .gl-star-badge span { font-size: 8px; text-transform: uppercase; }
 
-    .gl-player-info {
+    .swgb-tech-badge {
       display: flex;
-      flex-direction: column;
-      gap: 2px;
+      align-items: center;
+      gap: 10px;
     }
-    .gl-player-name {
+
+    .swgb-tech-pill {
+      background: linear-gradient(180deg, #064e3b 0%, #022c22 100%);
+      border: 1px solid #10b981;
+      color: #6ee7b7;
+      padding: 4px 12px;
+      border-radius: 4px;
+      font-size: 11px;
+      font-weight: 900;
+      letter-spacing: 0.8px;
+      box-shadow: inset 0 0 6px rgba(16, 185, 129, 0.4);
+    }
+
+    .swgb-civ-title {
       font-size: 13px;
       font-weight: bold;
-      color: #fff;
+      color: var(--hud-gold-bright);
+      letter-spacing: 0.5px;
+    }
+
+    .swgb-resources-strip {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      overflow-x: auto;
+    }
+
+    .sw-res-item {
       display: flex;
       align-items: center;
       gap: 6px;
-    }
-    .gl-xp-bar-wrap {
-      width: 120px;
-      height: 8px;
-      background: #0f1523;
-      border-radius: 6px;
-      border: 1px solid #334155;
-      overflow: hidden;
-    }
-    .gl-xp-bar-fill {
-      width: 68%;
-      height: 100%;
-      background: linear-gradient(90deg, #3b82f6, #00e5ff);
-      border-radius: 6px;
-    }
-
-    /* Glossy Resource Capsules */
-    .gl-resource-capsules {
-      pointer-events: auto;
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      flex-wrap: wrap;
-    }
-
-    .gl-capsule {
-      background: var(--gl-panel);
-      border: 2px solid var(--gl-border);
-      border-radius: 20px;
-      padding: 4px 12px;
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
-      position: relative;
-    }
-
-    .gl-capsule-icon {
-      font-size: 18px;
-      filter: drop-shadow(0 2px 4px rgba(0,0,0,0.5));
-    }
-
-    .gl-capsule-body {
-      display: flex;
-      flex-direction: column;
-      min-width: 75px;
-    }
-    .gl-capsule-val {
       font-size: 12px;
       font-weight: 800;
-      color: #fff;
+      background: rgba(0, 0, 0, 0.6);
+      padding: 3px 8px;
+      border: 1px solid #33260d;
+      border-radius: 3px;
     }
-    .gl-capsule-bar {
-      width: 100%;
-      height: 5px;
-      background: #0d121d;
-      border-radius: 4px;
-      overflow: hidden;
-      margin-top: 1px;
-    }
-    .gl-capsule-fill {
-      height: 100%;
-      border-radius: 4px;
-    }
-    .gl-capsule.gold .gl-capsule-fill { background: linear-gradient(90deg, #f59e0b, #fbbf24); }
-    .gl-capsule.mineral .gl-capsule-fill { background: linear-gradient(90deg, #0284c7, #38bdf8); }
+    .sw-res-item.food { color: #a3e635; }
+    .sw-res-item.carbon { color: #fdba74; }
+    .sw-res-item.ore { color: #94a3b8; }
+    .sw-res-item.nova { color: #38bdf8; }
+    .sw-res-item.pop { color: #fde047; }
 
-    .gl-chip-pill {
-      background: linear-gradient(135deg, #7e22ce, #a855f7);
-      border: 2px solid #c084fc;
-      border-radius: 20px;
-      padding: 4px 12px;
-      display: flex;
-      align-items: center;
-      gap: 6px;
-      font-weight: 900;
-      font-size: 12px;
-      box-shadow: 0 0 10px rgba(168, 85, 247, 0.5);
-    }
-
-    .gl-shield-pill {
-      background: rgba(15, 23, 42, 0.9);
-      border: 2px solid #38bdf8;
-      border-radius: 20px;
-      padding: 4px 10px;
-      font-size: 11px;
-      font-weight: bold;
-      color: #38bdf8;
-      display: flex;
-      align-items: center;
-      gap: 5px;
-    }
-
-    /* ============================================================
-       BOTTOM HUD: GALAXY LIFE JUICY ACTION BUTTONS
-       ============================================================ */
-    .gl-bottom-hud {
-      position: absolute;
-      bottom: 12px;
-      left: 12px;
-      right: 12px;
-      display: flex;
-      justify-content: space-between;
-      align-items: flex-end;
-      pointer-events: none;
-      z-index: 100;
-    }
-
-    /* Botões da Esquerda */
-    .gl-left-actions {
-      pointer-events: auto;
-      display: flex;
-      flex-direction: column;
-      gap: 8px;
-    }
-
-    .gl-apk-pill {
-      background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+    .swgb-apk-btn {
+      background: linear-gradient(180deg, #15803d 0%, #166534 100%);
       color: #fff;
       text-decoration: none;
-      padding: 8px 16px;
-      border-radius: 25px;
-      font-size: 12px;
-      font-weight: 800;
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      border: 2px solid #34d399;
-      box-shadow: 0 4px 15px rgba(16, 185, 129, 0.5);
-      transition: all 0.2s;
-    }
-    .gl-apk-pill:hover {
-      transform: scale(1.05);
-      box-shadow: 0 6px 20px rgba(16, 185, 129, 0.7);
-    }
-
-    .gl-sub-btn {
-      background: var(--gl-panel);
-      border: 2px solid var(--gl-border);
-      color: #fff;
-      padding: 8px 14px;
-      border-radius: 20px;
+      padding: 5px 14px;
+      border-radius: 4px;
       font-size: 11px;
-      font-weight: bold;
+      font-weight: 900;
+      border: 1px solid #4ade80;
+      box-shadow: 0 0 10px rgba(34, 197, 94, 0.4);
       display: flex;
       align-items: center;
       gap: 6px;
-      cursor: pointer;
-      transition: all 0.15s;
+      transition: all 0.2s;
     }
-    .gl-sub-btn:hover {
-      border-color: var(--gl-cyan);
-      transform: translateY(-2px);
+    .swgb-apk-btn:hover {
+      background: linear-gradient(180deg, #16a34a 0%, #15803d 100%);
+      transform: translateY(-1px);
     }
-
-    /* Botões Grandes de Ação (Galaxy Life Battle & Shop) */
-    .gl-right-actions {
-      pointer-events: auto;
-      display: flex;
-      align-items: center;
-      gap: 14px;
-    }
-
-    .gl-big-btn {
-      width: 76px;
-      height: 76px;
-      border-radius: 50%;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      cursor: pointer;
-      border: 4px solid #fff;
-      box-shadow: 0 6px 20px rgba(0, 0, 0, 0.6);
-      transition: all 0.15s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-    }
-    .gl-big-btn:hover {
-      transform: scale(1.1);
-    }
-    .gl-big-btn:active {
-      transform: scale(0.95);
-    }
-
-    .gl-big-btn.attack {
-      background: linear-gradient(135deg, #ef4444 0%, #b91c1c 100%);
-      box-shadow: 0 0 20px rgba(239, 68, 68, 0.8);
-      color: #fff;
-    }
-    .gl-big-btn.shop {
-      background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
-      box-shadow: 0 0 20px rgba(245, 158, 11, 0.8);
-      color: #fff;
-    }
-    .gl-big-btn-icon { font-size: 26px; }
-    .gl-big-btn-label { font-size: 10px; font-weight: 900; text-transform: uppercase; letter-spacing: 0.5px; }
 
     /* ============================================================
-       FLOATING CONTEXT MENU (Quando clica em edifício)
+       BOTTOM HUD: AUTÊNTICO CONSOLE NABOO / GENIE ENGINE (SWGB)
        ============================================================ */
-    .gl-building-card {
+    .swgb-bottom-hud {
       position: absolute;
-      bottom: 96px;
-      left: 50%;
-      transform: translateX(-50%);
-      background: var(--gl-panel);
-      border: 2px solid var(--gl-border-glow);
-      border-radius: 16px;
-      padding: 12px 18px;
+      bottom: 0;
+      left: 0;
+      width: 100%;
+      height: 160px;
+      background-image: url('assets/sprites/swgb_hud.png');
+      background-size: 100% 100%;
+      background-repeat: no-repeat;
+      display: flex;
+      align-items: stretch;
+      z-index: 100;
+      box-shadow: 0 -8px 25px rgba(0, 0, 0, 0.95);
+      border-top: 2px solid var(--hud-gold-dark);
+    }
+
+    /* 1. Command Matrix (Esquerda - 9 Ações Vermelhas/Ouro) */
+    .swgb-cmd-panel {
+      width: 19%;
+      min-width: 130px;
+      max-width: 200px;
+      padding: 10px;
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      grid-gap: 5px;
+      align-content: center;
+    }
+
+    .sw-cmd-btn {
+      background: linear-gradient(180deg, #3f0e0e 0%, #200606 100%);
+      border: 1px solid #7f1d1d;
+      border-radius: 3px;
+      height: 38px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 15px;
+      cursor: pointer;
+      color: #fca5a5;
+      box-shadow: inset 0 0 5px rgba(239, 68, 68, 0.3);
+      transition: all 0.15s;
+    }
+    .sw-cmd-btn:hover {
+      border-color: #ef4444;
+      background: linear-gradient(180deg, #5c1818 0%, #300a0a 100%);
+      color: #fff;
+    }
+    .sw-cmd-btn:active {
+      transform: translateY(1px);
+    }
+
+    /* 2. Unit Tray / Selection Center Card (Centro) */
+    .swgb-tray-panel {
+      flex: 1;
+      padding: 10px 14px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 12px;
+    }
+
+    .swgb-unit-grid {
+      display: grid;
+      grid-template-columns: repeat(12, 1fr);
+      grid-gap: 4px;
+      max-width: 440px;
+    }
+
+    .sw-unit-slot {
+      width: 32px;
+      height: 34px;
+      background: #090805;
+      border: 1px solid var(--hud-gold-dark);
+      border-radius: 2px;
+      position: relative;
+      cursor: pointer;
+      overflow: hidden;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .sw-unit-slot img { width: 100%; height: 100%; object-fit: cover; }
+    .sw-unit-hp-bar {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      width: 100%;
+      height: 3px;
+      background: #22c55e;
+    }
+
+    /* Card quando um edifício é selecionado */
+    .swgb-bld-card {
       display: none;
       align-items: center;
       gap: 16px;
-      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.8);
-      z-index: 120;
-      animation: popUp 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+      background: rgba(14, 11, 6, 0.85);
+      border: 1px solid var(--hud-gold);
+      padding: 8px 16px;
+      border-radius: 4px;
+      width: 100%;
+      max-width: 440px;
     }
-    @keyframes popUp {
-      from { opacity: 0; transform: translate(-50%, 20px) scale(0.9); }
-      to { opacity: 1; transform: translate(-50%, 0) scale(1); }
-    }
-
-    .gl-bld-thumb {
-      width: 54px;
-      height: 54px;
-      border-radius: 12px;
-      background: #0f1523;
-      border: 2px solid var(--gl-gold);
+    .swgb-bld-thumb {
+      width: 64px;
+      height: 64px;
+      border: 1px solid var(--hud-gold);
+      background: #000;
       overflow: hidden;
+    }
+    .swgb-bld-thumb img { width: 100%; height: 100%; object-fit: cover; }
+    .swgb-bld-details h3 { font-size: 13px; color: var(--hud-gold-bright); margin-bottom: 2px; }
+    .swgb-bld-details p { font-size: 11px; color: #94a3b8; margin-bottom: 4px; }
+    .swgb-hp-bar {
+      width: 160px;
+      height: 8px;
+      background: #000;
+      border: 1px solid #444;
+      border-radius: 2px;
+      overflow: hidden;
+    }
+    .swgb-hp-fill { width: 100%; height: 100%; background: #22c55e; }
+
+    /* 3. Minimap Radar (Direita - Diamante Dourado) */
+    .swgb-radar-panel {
+      width: 32%;
+      min-width: 190px;
+      max-width: 300px;
+      position: relative;
       display: flex;
       align-items: center;
       justify-content: center;
-    }
-    .gl-bld-thumb img { width: 100%; height: 100%; object-fit: contain; }
-
-    .gl-bld-info h3 { font-size: 14px; color: var(--gl-gold); font-weight: 800; }
-    .gl-bld-info p { font-size: 11px; color: #94a3b8; }
-
-    .gl-bld-actions {
-      display: flex;
-      gap: 8px;
-    }
-    .gl-action-pill {
-      background: linear-gradient(135deg, #22c55e, #16a34a);
-      border: 2px solid #86efac;
-      color: #fff;
-      padding: 6px 14px;
-      border-radius: 20px;
-      font-size: 11px;
-      font-weight: 800;
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      gap: 5px;
-      box-shadow: 0 4px 10px rgba(34, 197, 94, 0.4);
+      padding: 6px;
     }
 
-    /* Modais Estilo Galaxy Life */
-    .gl-modal-backdrop {
+    canvas#minimap-canvas {
+      width: 150px;
+      height: 115px;
+      background: transparent;
+      cursor: crosshair;
+    }
+
+    /* Tactical Waypoint Ping */
+    .waypoint-ping {
+      position: absolute;
+      width: 24px;
+      height: 24px;
+      border: 2px solid #22c55e;
+      border-radius: 50%;
+      transform: translate(-50%, -50%);
+      pointer-events: none;
+      animation: pingExpand 0.6s ease-out forwards;
+    }
+    @keyframes pingExpand {
+      0% { opacity: 1; transform: translate(-50%, -50%) scale(0.4); }
+      100% { opacity: 0; transform: translate(-50%, -50%) scale(2.2); }
+    }
+
+    /* Modal de Batalha / Missões */
+    .swgb-modal-overlay {
       position: fixed;
       top: 0;
       left: 0;
       width: 100%;
       height: 100%;
-      background: rgba(0, 0, 0, 0.75);
-      backdrop-filter: blur(4px);
+      background: rgba(0, 0, 0, 0.8);
       z-index: 300;
       display: none;
       justify-content: center;
       align-items: center;
     }
 
-    .gl-modal-window {
-      background: linear-gradient(180deg, #1e2638 0%, #101524 100%);
-      border: 3px solid var(--gl-gold);
-      border-radius: 20px;
+    .swgb-modal-box {
+      background: linear-gradient(180deg, #1c150a 0%, #0d0a04 100%);
+      border: 2px solid var(--hud-gold);
+      border-radius: 6px;
       width: 90%;
       max-width: 520px;
-      box-shadow: 0 0 35px rgba(255, 196, 0, 0.35);
+      box-shadow: 0 0 35px rgba(198, 146, 36, 0.5);
       overflow: hidden;
     }
 
-    .gl-modal-header {
-      background: #141b2a;
-      padding: 14px 20px;
-      border-bottom: 2px solid var(--gl-border);
+    .swgb-modal-header {
+      background: #140f06;
+      padding: 12px 18px;
+      border-bottom: 1px solid var(--hud-gold-dark);
       display: flex;
       justify-content: space-between;
       align-items: center;
     }
-    .gl-modal-header h2 { font-size: 16px; color: var(--gl-gold); font-weight: 900; }
-    .gl-modal-close {
-      background: #ef4444;
-      border: 2px solid #fff;
-      color: #fff;
-      width: 28px;
-      height: 28px;
-      border-radius: 50%;
-      font-weight: 900;
+    .swgb-modal-header h2 { font-size: 15px; color: var(--hud-gold-bright); }
+    .swgb-modal-close {
+      background: transparent;
+      border: none;
+      color: #94a3b8;
+      font-size: 22px;
       cursor: pointer;
     }
 
-    .gl-modal-content {
+    .swgb-modal-body {
       padding: 16px;
       display: flex;
       flex-direction: column;
-      gap: 12px;
-      max-height: 65vh;
+      gap: 10px;
+      max-height: 70vh;
       overflow-y: auto;
     }
 
-    .gl-shop-card {
-      background: #0c101a;
-      border: 2px solid var(--gl-border);
-      border-radius: 14px;
+    .mission-card {
+      background: #080603;
+      border: 1px solid var(--hud-gold-dark);
       padding: 12px;
+      border-radius: 4px;
       display: flex;
-      align-items: center;
       justify-content: space-between;
-      gap: 12px;
-      transition: all 0.15s;
-    }
-    .gl-shop-card:hover { border-color: var(--gl-cyan); transform: translateY(-2px); }
-
-    .gl-shop-card-left {
-      display: flex;
       align-items: center;
-      gap: 12px;
     }
-    .gl-shop-icon {
-      width: 48px;
-      height: 48px;
-      background: #161e30;
-      border-radius: 10px;
-      border: 2px solid var(--gl-cyan);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 24px;
-    }
+    .mission-card h4 { font-size: 13px; color: var(--hud-gold-bright); }
+    .mission-card p { font-size: 11px; color: #94a3b8; margin: 2px 0; }
 
-    .gl-buy-btn {
-      background: linear-gradient(135deg, #f59e0b, #d97706);
-      border: 2px solid #fde68a;
+    .sw-action-btn {
+      background: linear-gradient(180deg, #854d0e, #533006);
+      border: 1px solid var(--hud-gold);
       color: #fff;
-      padding: 8px 16px;
-      border-radius: 20px;
-      font-size: 12px;
-      font-weight: 900;
+      padding: 6px 14px;
+      border-radius: 3px;
+      font-size: 11px;
+      font-weight: bold;
       cursor: pointer;
-      box-shadow: 0 4px 10px rgba(245, 158, 11, 0.4);
     }
 
-    /* Toast */
-    .gl-toast {
+    .sw-toast {
       position: absolute;
-      top: 75px;
+      top: 55px;
       left: 50%;
       transform: translateX(-50%);
-      background: var(--gl-panel);
-      border: 2px solid var(--gl-cyan);
-      color: #fff;
+      background: rgba(18, 14, 6, 0.95);
+      border: 1px solid var(--hud-gold);
+      color: var(--hud-gold-bright);
       padding: 8px 24px;
-      border-radius: 30px;
-      font-size: 13px;
-      font-weight: 800;
-      z-index: 250;
-      box-shadow: 0 0 20px rgba(0, 229, 255, 0.5);
+      border-radius: 4px;
+      font-size: 12px;
+      font-weight: bold;
+      z-index: 200;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.8);
       display: none;
     }
 
-    /* Floating Particles */
-    .float-number {
-      position: absolute;
-      font-weight: 900;
-      font-size: 18px;
-      color: #fde047;
-      text-shadow: 0 2px 4px #000;
-      pointer-events: none;
-      animation: floatUp 0.8s ease-out forwards;
-      z-index: 200;
-    }
-    @keyframes floatUp {
-      0% { opacity: 1; transform: translateY(0) scale(1); }
-      100% { opacity: 0; transform: translateY(-40px) scale(1.3); }
+    @media (max-width: 768px) {
+      .swgb-bottom-hud { height: 130px; }
+      .swgb-cmd-panel { width: 22%; min-width: 100px; padding: 6px; }
+      .sw-cmd-btn { height: 30px; font-size: 12px; }
+      .swgb-unit-grid { grid-template-columns: repeat(8, 1fr); }
+      .sw-unit-slot { width: 26px; height: 28px; }
     }
   </style>
 </head>
 <body>
 
 <div id="game-container">
-  <!-- Canvas do Planeta e Colônia Isométrica -->
+  <!-- Canvas do Mundo: Campo de Batalha de Naboo (Star Wars: Galactic Battlegrounds) -->
   <canvas id="isometric-canvas"></canvas>
 
-  <!-- TOP HUD: ESTILO GALAXY LIFE -->
-  <header class="gl-top-hud">
-    <!-- Star Level & Player Info -->
-    <div class="gl-player-card">
-      <div class="gl-star-badge">
-        12
-        <span>NÍVEL</span>
-      </div>
-      <div class="gl-player-info">
-        <div class="gl-player-name">Comandante Dario 🪐</div>
-        <div class="gl-xp-bar-wrap">
-          <div class="gl-xp-bar-fill"></div>
-        </div>
-      </div>
+  <!-- Barra Superior de Recursos do Star Wars Galactic Battlegrounds -->
+  <header class="swgb-top-bar">
+    <div class="swgb-tech-badge">
+      <div class="swgb-tech-pill">TECH LEVEL 4</div>
+      <div class="swgb-civ-title">THEED • IMPÉRIO NABOO</div>
     </div>
 
-    <!-- Resource Capsules -->
-    <div class="gl-resource-capsules">
-      <div class="gl-capsule gold">
-        <div class="gl-capsule-icon">🪙</div>
-        <div class="gl-capsule-body">
-          <div class="gl-capsule-val" id="val-gold">14.850</div>
-          <div class="gl-capsule-bar"><div class="gl-capsule-fill" style="width: 65%;"></div></div>
-        </div>
-      </div>
-
-      <div class="gl-capsule mineral">
-        <div class="gl-capsule-icon">⚡</div>
-        <div class="gl-capsule-body">
-          <div class="gl-capsule-val" id="val-minerals">12.200</div>
-          <div class="gl-capsule-bar"><div class="gl-capsule-fill" style="width: 58%;"></div></div>
-        </div>
-      </div>
-
-      <div class="gl-chip-pill">
-        <span>💎</span> <span id="val-chips">350</span> Chips
-      </div>
-
-      <div class="gl-shield-pill">
-        <span>🛡️</span> 47h 50m
-      </div>
+    <div class="swgb-resources-strip">
+      <div class="sw-res-item food" title="Alimento colhido dos Qanats">🌾 <span id="val-food">1.850</span></div>
+      <div class="sw-res-item carbon" title="Carbono para Construção">🪵 <span id="val-carbon">1.420</span></div>
+      <div class="sw-res-item ore" title="Minério Metálico">🪨 <span id="val-ore">980</span></div>
+      <div class="sw-res-item nova" title="Cristais Nova de Energia">💎 <span id="val-nova">650</span></div>
+      <div class="sw-res-item pop" title="Limite de População">🛡️ <span id="val-pop">24/75</span></div>
     </div>
+
+    <a href="/downloads/imperios.apk" class="swgb-apk-btn" download>
+      <span>📱</span> Baixar APK Android
+    </a>
   </header>
 
-  <!-- TOAST NOTIFICATION -->
-  <div class="gl-toast" id="gl-toast">Alerta do Comandante</div>
+  <!-- Notificação Toast -->
+  <div class="sw-toast" id="sw-toast">Transmissão Tática</div>
 
-  <!-- FLOATING BUILDING CARD (Aparece ao tocar em edifício) -->
-  <div class="gl-building-card" id="gl-building-card">
-    <div class="gl-bld-thumb">
-      <img id="card-bld-img" src="assets/sprites/galaxy_starbase.png" alt="Edifício">
-    </div>
-    <div class="gl-bld-info">
-      <h3 id="card-bld-title">Base Central Estelar</h3>
-      <p id="card-bld-desc">Nível 3 • Centro da Colônia</p>
-    </div>
-    <div class="gl-bld-actions">
-      <button class="gl-action-pill" onclick="upgradeSelectedBuilding()">
-        <span>⬆️</span> Melhorar
-      </button>
-      <button class="gl-action-pill" style="background: linear-gradient(135deg, #0284c7, #0369a1);" onclick="showBuildingInfo()">
-        <span>ℹ️</span> Info
-      </button>
-    </div>
-  </div>
-
-  <!-- BOTTOM HUD: GALAXY LIFE BUTTONS -->
-  <footer class="gl-bottom-hud">
-    <div class="gl-left-actions">
-      <a href="/downloads/imperios.apk" class="gl-apk-pill" download>
-        <span>📱</span> Baixar APK Android
-      </a>
-      <button class="gl-sub-btn" onclick="openAllianceModal()">
-        <span>🛡️</span> Aliança Galáctica
-      </button>
+  <!-- CONSOLE INFERIOR: AUTÊNTICO STAR WARS GALACTIC BATTLEGROUNDS -->
+  <footer class="swgb-bottom-hud">
+    <!-- 1. Command Matrix (Esquerda) -->
+    <div class="swgb-cmd-panel">
+      <div class="sw-cmd-btn" title="Atacar Alvo" onclick="orderAttack()">⚔️</div>
+      <div class="sw-cmd-btn" title="Parar Ordem" onclick="orderStop()">🛑</div>
+      <div class="sw-cmd-btn" title="Patrulhar Avenida" onclick="orderPatrol()">🛡️</div>
+      <div class="sw-cmd-btn" title="Formação em Linha" onclick="changeFormation('LINE')">➖</div>
+      <div class="sw-cmd-btn" title="Formação em Bloco" onclick="changeFormation('BOX')">⏹️</div>
+      <div class="sw-cmd-btn" title="Formação de Flanco" onclick="changeFormation('FLANK')">📐</div>
+      <div class="sw-cmd-btn" title="Construir Defesas" onclick="openBuildModal()">🔨</div>
+      <div class="sw-cmd-btn" title="Campanha Galáctica" onclick="openCampaignModal()">🚀</div>
+      <div class="sw-cmd-btn" title="Centralizar Vila" onclick="centerCamera()">🎯</div>
     </div>
 
-    <div class="gl-right-actions">
-      <!-- Botão Atacar (Galaxy Life Red Button) -->
-      <div class="gl-big-btn attack" onclick="openAttackModal()">
-        <div class="gl-big-btn-icon">⚔️</div>
-        <div class="gl-big-btn-label">Atacar</div>
+    <!-- 2. Unit Tray & Building Card (Centro) -->
+    <div class="swgb-tray-panel">
+      <!-- Grade de 24 Tropas do Pelotão -->
+      <div class="swgb-unit-grid" id="swgb-unit-grid">
+        <!-- 24 slots preenchidos dinamicamente -->
       </div>
 
-      <!-- Botão Loja (Galaxy Life Yellow Hammer Button) -->
-      <div class="gl-big-btn shop" onclick="openShopModal()">
-        <div class="gl-big-btn-icon">🏪</div>
-        <div class="gl-big-btn-label">Loja</div>
+      <!-- Card do Edifício Selecionado -->
+      <div class="swgb-bld-card" id="swgb-bld-card">
+        <div class="swgb-bld-thumb">
+          <img id="bld-thumb-img" src="assets/sprites/swgb_bld_dome.png" alt="Edifício">
+        </div>
+        <div class="swgb-bld-details">
+          <h3 id="bld-name">Palácio Central de Theed</h3>
+          <p id="bld-desc">Centro Governamental • Armadura: 35</p>
+          <div class="swgb-hp-bar">
+            <div class="swgb-hp-fill" id="bld-hp-fill" style="width: 100%;"></div>
+          </div>
+          <div style="display: flex; gap: 6px; margin-top: 6px;">
+            <button class="sw-action-btn" onclick="trainBattalion()">+ Recrutar Batalhão</button>
+            <button class="sw-action-btn" onclick="repairBuilding()">🔧 Reparar</button>
+          </div>
+        </div>
       </div>
+    </div>
+
+    <!-- 3. Radar Minimap (Direita) -->
+    <div class="swgb-radar-panel">
+      <canvas id="minimap-canvas" width="150" height="115"></canvas>
     </div>
   </footer>
 
-  <!-- MODAL LOJA / SHOP -->
-  <div class="gl-modal-backdrop" id="modal-shop">
-    <div class="gl-modal-window">
-      <div class="gl-modal-header">
-        <h2>🏪 Loja de Estruturas & Defesas</h2>
-        <button class="gl-modal-close" onclick="closeModal('modal-shop')">&times;</button>
+  <!-- MODAL CAMPANHA GALÁCTICA -->
+  <div class="swgb-modal-overlay" id="modal-campaign">
+    <div class="swgb-modal-box">
+      <div class="swgb-modal-header">
+        <h2>🚀 Campanhas & Batalhas Galácticas</h2>
+        <button class="swgb-modal-close" onclick="closeModal('modal-campaign')">&times;</button>
       </div>
-      <div class="gl-modal-content">
-        <div class="gl-shop-card">
-          <div class="gl-shop-card-left">
-            <div class="gl-shop-icon">⛏️</div>
-            <div>
-              <h4 style="color: var(--gl-cyan); font-size: 13px;">Extrator de Minerais (3x3)</h4>
-              <p style="font-size: 11px; color: #94a3b8;">Perfura o geodo e extrai +250 Minerais/h.</p>
-              <span style="font-size: 11px; color: var(--gl-gold);">Custo: 🪙 500 Moedas</span>
-            </div>
+      <div class="swgb-modal-body">
+        <div class="mission-card">
+          <div>
+            <h4>Batalha das Planícies Verdes de Naboo</h4>
+            <p>Confronto de droids da Federação do Comércio contra a Guarda Real.</p>
+            <span style="color: var(--hud-gold-bright); font-size: 11px;">Recompensa: 🥩 1.200, 🪵 1.500, 💎 100 Nova</span>
           </div>
-          <button class="gl-buy-btn" onclick="startPlacement('EXTRACTOR', 3, 3, 500, 0)">Comprar</button>
+          <button class="sw-action-btn" onclick="startBattle('Planícies de Naboo', 1200, 1500, 100)">Lançar Ataque</button>
         </div>
 
-        <div class="gl-shop-card">
-          <div class="gl-shop-card-left">
-            <div class="gl-shop-icon">🪙</div>
-            <div>
-              <h4 style="color: var(--gl-gold); font-size: 13px;">Banco / Silo Galáctico (3x3)</h4>
-              <p style="font-size: 11px; color: #94a3b8;">Aumenta a capacidade de ouro da colônia.</p>
-              <span style="font-size: 11px; color: var(--gl-cyan);">Custo: ⚡ 600 Minerais</span>
-            </div>
+        <div class="mission-card">
+          <div>
+            <h4>Invasão dos Hangares de Theed</h4>
+            <p>Retomada dos geradores de plasma e caças estelares.</p>
+            <span style="color: var(--hud-gold-bright); font-size: 11px;">Recompensa: 🥩 2.500, 🪨 2.000, 💎 250 Nova</span>
           </div>
-          <button class="gl-buy-btn" onclick="startPlacement('BANK', 3, 3, 0, 600)">Comprar</button>
-        </div>
-
-        <div class="gl-shop-card">
-          <div class="gl-shop-card-left">
-            <div class="gl-shop-icon">⚔️</div>
-            <div>
-              <h4 style="color: #f87171; font-size: 13px;">Quartel de Tropas (3x3)</h4>
-              <p style="font-size: 11px; color: #94a3b8;">Treina Marines e Tropas Especiais.</p>
-              <span style="font-size: 11px; color: var(--gl-gold);">Custo: 🪙 800 Moedas</span>
-            </div>
-          </div>
-          <button class="gl-buy-btn" onclick="startPlacement('BARRACKS', 3, 3, 800, 200)">Comprar</button>
-        </div>
-
-        <div class="gl-shop-card">
-          <div class="gl-shop-card-left">
-            <div class="gl-shop-icon">💥</div>
-            <div>
-              <h4 style="color: var(--gl-gold); font-size: 13px;">Canhão de Plasma Defensivo (2x2)</h4>
-              <p style="font-size: 11px; color: #94a3b8;">Dispara rajadas de plasma contra invasores.</p>
-              <span style="font-size: 11px; color: var(--gl-gold);">Custo: 🪙 750 Moedas</span>
-            </div>
-          </div>
-          <button class="gl-buy-btn" onclick="startPlacement('CANNON', 2, 2, 750, 400)">Comprar</button>
+          <button class="sw-action-btn" onclick="startBattle('Hangares de Theed', 2500, 2000, 250)">Lançar Ataque</button>
         </div>
       </div>
     </div>
   </div>
 
-  <!-- MODAL ATAQUE / BATALHA ESTELAR -->
-  <div class="gl-modal-backdrop" id="modal-attack">
-    <div class="gl-modal-window">
-      <div class="gl-modal-header">
-        <h2>⚔️ Mapa Galáctico de Invasão</h2>
-        <button class="gl-modal-close" onclick="closeModal('modal-attack')">&times;</button>
+  <!-- MODAL CONSTRUÇÃO -->
+  <div class="swgb-modal-overlay" id="modal-build">
+    <div class="swgb-modal-box">
+      <div class="swgb-modal-header">
+        <h2>🔨 Obras & Fortificações Imperiais</h2>
+        <button class="swgb-modal-close" onclick="closeModal('modal-build')">&times;</button>
       </div>
-      <div class="gl-modal-content">
-        <div class="gl-shop-card">
-          <div class="gl-shop-card-left">
-            <div class="gl-shop-icon">🪐</div>
-            <div>
-              <h4 style="color: #f87171; font-size: 13px;">Colônia Rebelde de Kepler-452</h4>
-              <p style="font-size: 11px; color: #94a3b8;">Defesas moderadas • Espólio: 🪙 4.500, ⚡ 3.800</p>
-            </div>
+      <div class="swgb-modal-body">
+        <div class="mission-card">
+          <div>
+            <h4>Torre de Artilharia Pesada</h4>
+            <p>Bateria defensiva com canhões de plasma duplos de longo alcance.</p>
+            <span style="color: var(--hud-gold-bright); font-size: 11px;">Custo: 🪵 250 Carbono, 🪨 200 Minério</span>
           </div>
-          <button class="gl-buy-btn" style="background: linear-gradient(135deg, #ef4444, #b91c1c);" onclick="launchRaid('Kepler-452', 4500, 3800)">Invadir</button>
+          <button class="sw-action-btn" onclick="buildDefense('Torre Pesada')">Erguer Bastião</button>
         </div>
 
-        <div class="gl-shop-card">
-          <div class="gl-shop-card-left">
-            <div class="gl-shop-icon">☄️</div>
-            <div>
-              <h4 style="color: #f87171; font-size: 13px;">Base Pirata do Cinturão de Órion</h4>
-              <p style="font-size: 11px; color: #94a3b8;">Alta defesa • Espólio: 🪙 8.200, ⚡ 6.500, 💎 50</p>
-            </div>
+        <div class="mission-card">
+          <div>
+            <h4>Barricada de Trincheiras & Sandbags</h4>
+            <p>Bloqueio tático de solo para proteção da infantaria.</p>
+            <span style="color: var(--hud-gold-bright); font-size: 11px;">Custo: 🪵 100 Carbono, 🪨 50 Minério</span>
           </div>
-          <button class="gl-buy-btn" style="background: linear-gradient(135deg, #ef4444, #b91c1c);" onclick="launchRaid('Cinturão de Órion', 8200, 6500, 50)">Invadir</button>
-        </div>
-
-        <div id="raid-live-box" style="display: none; background: #080c14; padding: 12px; border-radius: 10px; border-left: 3px solid var(--gl-cyan); font-size: 11px; font-family: monospace;"></div>
-      </div>
-    </div>
-  </div>
-
-  <!-- MODAL ALIANÇA -->
-  <div class="gl-modal-backdrop" id="modal-alliance">
-    <div class="gl-modal-window">
-      <div class="gl-modal-header">
-        <h2>🛡️ Aliança Galáctica</h2>
-        <button class="gl-modal-close" onclick="closeModal('modal-alliance')">&times;</button>
-      </div>
-      <div class="gl-modal-content">
-        <div style="background: rgba(255,255,255,0.04); padding: 14px; border-radius: 12px; border: 1px solid var(--gl-border);">
-          <h3 style="color: var(--gl-gold); font-size: 14px; margin-bottom: 4px;">Guardiões da Galáxia [GLX]</h3>
-          <p style="font-size: 11px; color: #94a3b8; margin-bottom: 12px;">38 Membros Ativos • Nível 8 de Clã • Bônus de Defesa +15%</p>
-          <button class="gl-buy-btn" style="width: 100%;" onclick="showToast('🚀 5 Tropas doadas para reforço da Aliança!')">Doar Tropas de Reforço</button>
+          <button class="sw-action-btn" onclick="buildDefense('Barricada')">Posicionar</button>
         </div>
       </div>
     </div>
@@ -715,100 +536,76 @@
 
 <script>
   // ============================================================
-  // MOTOR DE JOGO ISOMÉTRICO 2.5D ESTILO GALAXY LIFE
+  // MOTOR AUTÊNTICO STAR WARS: GALACTIC BATTLEGROUNDS
   // ============================================================
-  const GRID_SIZE = 36;
-  const TILE_W = 64;
-  const TILE_H = 32;
+  const canvas = document.getElementById('isometric-canvas');
+  const ctx = canvas.getContext('2d');
+  const minimapCanvas = document.getElementById('minimap-canvas');
+  const miniCtx = minimapCanvas.getContext('2d');
 
-  // Carregador de Imagens Estilo Galaxy Life
-  const ASSETS = {};
-  const ASSET_PATHS = {
-    starbase: 'assets/sprites/galaxy_starbase.png',
-    extractor: 'assets/sprites/galaxy_extractor.png',
-    bank: 'assets/sprites/galaxy_bank.png',
-    barracks: 'assets/sprites/galaxy_barracks.png',
-    cannon: 'assets/sprites/galaxy_cannon.png',
-    tile_planet: 'assets/sprites/galaxy_tile_planet.png',
-    tile_road: 'assets/sprites/galaxy_tile_road.png',
-    tile_crater: 'assets/sprites/galaxy_tile_crater.png',
-    tile_water: 'assets/sprites/galaxy_tile_water.png',
-    starling_0: 'assets/sprites/galaxy_starling_0.png',
-    starling_1: 'assets/sprites/galaxy_starling_1.png',
-    starling_2: 'assets/sprites/galaxy_starling_2.png',
-    starling_3: 'assets/sprites/galaxy_starling_3.png',
-    soldier_0: 'assets/sprites/galaxy_soldier_0.png',
-    soldier_1: 'assets/sprites/galaxy_soldier_1.png',
-    soldier_2: 'assets/sprites/galaxy_soldier_2.png',
-    soldier_3: 'assets/sprites/galaxy_soldier_3.png',
-    bubble_gold: 'assets/sprites/galaxy_bubble_gold.png',
-    bubble_min: 'assets/sprites/galaxy_bubble_mineral.png'
+  // Repositório de Sprites Extraídos do Star Wars Galactic Battlegrounds
+  const SPRITES = {};
+  const ASSET_LIST = {
+    world: 'assets/sprites/swgb_world.png',
+    hud: 'assets/sprites/swgb_hud.png',
+    bld_tower1: 'assets/sprites/swgb_bld_tower1.png',
+    bld_dome: 'assets/sprites/swgb_bld_dome.png',
+    bld_tower2: 'assets/sprites/swgb_bld_tower2.png',
+    bld_greenhouse: 'assets/sprites/swgb_bld_greenhouse.png',
+    bridge: 'assets/sprites/swgb_bridge.png',
+    droids: 'assets/sprites/swgb_droid_squad.png',
+    icon_droid: 'assets/sprites/swgb_icon_droid.png'
   };
 
   let loadedCount = 0;
-  for (const [key, path] of Object.entries(ASSET_PATHS)) {
+  for (const [key, url] of Object.entries(ASSET_LIST)) {
     const img = new Image();
-    img.src = path;
+    img.src = url;
     img.onload = () => { loadedCount++; };
-    ASSETS[key] = img;
+    SPRITES[key] = img;
   }
 
-  // Estado da Colônia
+  // Estado Tático do Jogo
   const state = {
-    gold: 14850,
-    minerals: 12200,
-    chips: 350,
-    terrain: [],
+    food: 1850,
+    carbon: 1420,
+    ore: 980,
+    nova: 650,
+    population: 24,
+    // Edifícios Históricos de Naboo / Theed posicionados exatamente na avenida
     buildings: [
-      { id: 'bld_sb', type: 'STARBASE', name: 'Base Central Estelar', lvl: 3, gridX: 16, gridY: 16, w: 4, h: 4, hp: 3200, maxHp: 3200, spriteKey: 'starbase', anchorX: 128, anchorY: 210, readyHarvest: false },
-      { id: 'bld_ext1', type: 'EXTRACTOR', name: 'Extrator de Minerais', lvl: 4, gridX: 11, gridY: 16, w: 3, h: 3, hp: 1400, maxHp: 1400, spriteKey: 'extractor', anchorX: 96, anchorY: 155, readyHarvest: true, resType: 'mineral' },
-      { id: 'bld_ext2', type: 'EXTRACTOR', name: 'Extrator de Minerais', lvl: 3, gridX: 11, gridY: 21, w: 3, h: 3, hp: 1200, maxHp: 1200, spriteKey: 'extractor', anchorX: 96, anchorY: 155, readyHarvest: true, resType: 'mineral' },
-      { id: 'bld_bank', type: 'BANK', name: 'Banco Galáctico', lvl: 3, gridX: 22, gridY: 16, w: 3, h: 3, hp: 1800, maxHp: 1800, spriteKey: 'bank', anchorX: 96, anchorY: 155, readyHarvest: true, resType: 'gold' },
-      { id: 'bld_bar', type: 'BARRACKS', name: 'Quartel de Tropas', lvl: 2, gridX: 16, gridY: 22, w: 3, h: 3, hp: 2000, maxHp: 2000, spriteKey: 'barracks', anchorX: 96, anchorY: 155, readyHarvest: false },
-      { id: 'bld_can', type: 'CANNON', name: 'Torre de Canhão Plasma', lvl: 3, gridX: 16, gridY: 12, w: 2, h: 2, hp: 1500, maxHp: 1500, spriteKey: 'cannon', anchorX: 64, anchorY: 130, readyHarvest: false }
+      { id: 'bld_palace', name: 'Palácio Central de Theed', type: 'PALACE', x: 280, y: 190, w: 140, h: 180, hp: 2800, maxHp: 2800, spriteKey: 'bld_dome' },
+      { id: 'bld_tower_l', name: 'Torre da Guarda Ocidental', type: 'TOWER', x: 110, y: 150, w: 120, h: 200, hp: 2100, maxHp: 2100, spriteKey: 'bld_tower1' },
+      { id: 'bld_tower_r', name: 'Torre da Guarda Oriental', type: 'TOWER', x: 540, y: 100, w: 150, h: 210, hp: 2400, maxHp: 2400, spriteKey: 'bld_tower2' },
+      { id: 'bld_greenhouse', name: 'Academia Governamental de Theed', type: 'ACADEMY', x: 690, y: 160, w: 130, h: 150, hp: 1900, maxHp: 1900, spriteKey: 'bld_greenhouse' },
+      { id: 'bld_bridge', name: 'Ponte Estratégica do Rio Naboo', type: 'BRIDGE', x: 180, y: 50, w: 200, h: 120, hp: 3500, maxHp: 3500, spriteKey: 'bridge' }
     ],
-    // Habitantes Starling que andam e saltam pela colônia
-    citizens: [
-      { id: 'c1', type: 'STARLING', gridX: 15, gridY: 18, targetX: 23, dir: 1, speed: 0.03 },
-      { id: 'c2', type: 'STARLING', gridX: 20, gridY: 18, targetX: 12, dir: -1, speed: 0.025 },
-      { id: 's1', type: 'SOLDIER', gridX: 16, gridY: 14, targetX: 16, dir: 1, speed: 0.02 }
-    ],
+    // Pelotão de 24 Battle Droids marchando na avenida
+    squad: {
+      x: 620,
+      y: 330,
+      targetX: 620,
+      targetY: 330,
+      speed: 1.6,
+      formation: 'LINE',
+      count: 24,
+      hp: 120,
+      maxHp: 120,
+      selected: true
+    },
     selectedBuilding: null,
-    hoveredGrid: { x: 18, y: 18 },
-    placementMode: null,
     camera: {
       x: 0,
       y: 0,
       targetX: 0,
       targetY: 0,
-      zoom: 1.15,
-      targetZoom: 1.15,
+      zoom: 1.0,
+      targetZoom: 1.0,
       isDragging: false,
       lastX: 0,
       lastY: 0
     }
   };
-
-  function initTerrain() {
-    state.terrain = [];
-    for (let x = 0; x < GRID_SIZE; x++) {
-      state.terrain[x] = [];
-      for (let y = 0; y < GRID_SIZE; y++) {
-        let type = 'PLANET';
-        // Estrada de conduíte cruzando o centro
-        if (y === 18 && x >= 4 && x <= 32) type = 'ROAD';
-        // Cratera mineral
-        else if (Math.hypot(x - 8, y - 8) <= 2.5) type = 'CRATER';
-        // Lago de plasma
-        else if (Math.hypot(x - 28, y - 8) <= 2.8) type = 'WATER';
-        state.terrain[x][y] = { type };
-      }
-    }
-  }
-  initTerrain();
-
-  const canvas = document.getElementById('isometric-canvas');
-  const ctx = canvas.getContext('2d');
 
   function resizeCanvas() {
     canvas.width = window.innerWidth;
@@ -821,28 +618,30 @@
   resizeCanvas();
 
   function centerCamera() {
-    state.camera.targetX = canvas.width / 2;
-    state.camera.targetY = canvas.height / 2 - 40;
+    state.camera.targetX = (canvas.width / 2) - 472;
+    state.camera.targetY = (canvas.height / 2) - 300;
     state.camera.x = state.camera.targetX;
     state.camera.y = state.camera.targetY;
-    state.camera.targetZoom = 1.15;
+    state.camera.targetZoom = 1.0;
   }
 
-  function gridToScreen(gx, gy) {
-    const isoX = (gx - gy) * (TILE_W / 2) * state.camera.zoom + state.camera.x;
-    const isoY = (gx + gy) * (TILE_H / 2) * state.camera.zoom + state.camera.y;
-    return { x: isoX, y: isoY };
+  // Preenche o Grid de 24 Tropas no Console Inferior
+  function initUnitTray() {
+    const grid = document.getElementById('swgb-unit-grid');
+    grid.innerHTML = '';
+    for (let i = 0; i < 24; i++) {
+      const slot = document.createElement('div');
+      slot.className = 'sw-unit-slot';
+      slot.title = `Trooper B1 #${i+1} • 100% HP`;
+      slot.innerHTML = `
+        <img src="assets/sprites/swgb_icon_droid.png" alt="Droid">
+        <div class="sw-unit-hp-bar"></div>
+      `;
+      slot.onclick = () => { selectSquad(); };
+      grid.appendChild(slot);
+    }
   }
-
-  function screenToGrid(sx, sy) {
-    const adjX = (sx - state.camera.x) / state.camera.zoom;
-    const adjY = (sy - state.camera.y) / state.camera.zoom;
-    const halfW = TILE_W / 2;
-    const halfH = TILE_H / 2;
-    const gx = Math.floor((adjX / halfW + adjY / halfH) / 2);
-    const gy = Math.floor((adjY / halfH - adjX / halfW) / 2);
-    return { x: gx, y: gy };
-  }
+  initUnitTray();
 
   // ============================================================
   // LOOP PRINCIPAL DE RENDERIZAÇÃO
@@ -852,214 +651,172 @@
   function render() {
     tick++;
 
-    // Suavização da Câmera
+    // Suavização de Câmera
     state.camera.x += (state.camera.targetX - state.camera.x) * 0.2;
     state.camera.y += (state.camera.targetY - state.camera.y) * 0.2;
     state.camera.zoom += (state.camera.targetZoom - state.camera.zoom) * 0.15;
 
     const z = state.camera.zoom;
-    const halfW = (TILE_W / 2) * z;
-    const halfH = (TILE_H / 2) * z;
 
     ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-    // 1. FUNDO CÓSMICO COM ESTRELAS
-    ctx.save();
-    ctx.fillStyle = '#0a0d18';
+    ctx.fillStyle = '#05070a';
     ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-    // Estrelas cintilantes no espaço
-    for (let i = 0; i < 45; i++) {
-      const sx = ((i * 137 + tick * 0.2) % canvas.width);
-      const sy = ((i * 269) % canvas.height);
-      const sr = (i % 3 === 0) ? 2 : 1;
-      const alpha = 0.4 + Math.sin(tick * 0.05 + i) * 0.3;
-      ctx.fillStyle = `rgba(255, 255, 255, ${alpha})`;
-      ctx.fillRect(sx, sy, sr, sr);
-    }
-    ctx.restore();
-
-    // 2. DISCO PLANETÁRIO / ASTEROIDE (A base flutuante de Galaxy Life)
-    const centerScreen = gridToScreen(GRID_SIZE / 2, GRID_SIZE / 2);
     ctx.save();
-    ctx.beginPath();
-    ctx.ellipse(centerScreen.x, centerScreen.y, (GRID_SIZE * TILE_W * 0.5) * z, (GRID_SIZE * TILE_H * 0.5) * z, 0, 0, Math.PI * 2);
-    ctx.fillStyle = '#1e293b';
-    ctx.fill();
-    ctx.lineWidth = 6 * z;
-    ctx.strokeStyle = '#00e5ff33';
-    ctx.stroke();
+    ctx.translate(state.camera.x, state.camera.y);
+    ctx.scale(z, z);
+
+    // 1. RENDERIZAÇÃO DO MUNDO AUTÊNTICO (Star Wars Galactic Battlegrounds)
+    if (SPRITES.world && SPRITES.world.complete) {
+      ctx.drawImage(SPRITES.world, 0, 0);
+
+      // Repete o mundo nas laterais para horizonte contínuo
+      ctx.drawImage(SPRITES.world, -944, 0);
+      ctx.drawImage(SPRITES.world, 944, 0);
+    }
+
+    // 2. EDIFÍCIOS INTERATIVOS COM DESTAQUE DE SELEÇÃO
+    for (const bld of state.buildings) {
+      const isSelected = state.selectedBuilding && state.selectedBuilding.id === bld.id;
+
+      if (isSelected) {
+        ctx.save();
+        ctx.strokeStyle = '#22c55e';
+        ctx.lineWidth = 2.5;
+        ctx.strokeRect(bld.x - 4, bld.y - 4, bld.w + 8, bld.h + 8);
+
+        // Barra de Vida no topo do edifício
+        ctx.fillStyle = 'rgba(0, 0, 0, 0.8)';
+        ctx.fillRect(bld.x, bld.y - 14, bld.w, 8);
+        ctx.fillStyle = '#22c55e';
+        ctx.fillRect(bld.x + 1, bld.y - 13, (bld.w - 2) * (bld.hp / bld.maxHp), 6);
+        ctx.restore();
+      }
+    }
+
+    // 3. MOVIMENTO E RENDERIZAÇÃO DO PELOTÃO DE DROIDS
+    const sq = state.squad;
+    const dx = sq.targetX - sq.x;
+    const dy = sq.targetY - sq.y;
+    const dist = Math.hypot(dx, dy);
+
+    if (dist > 2) {
+      sq.x += (dx / dist) * sq.speed;
+      sq.y += (dy / dist) * sq.speed;
+    }
+
+    if (SPRITES.droids && SPRITES.droids.complete) {
+      // Sombra sob a tropa
+      ctx.save();
+      ctx.beginPath();
+      ctx.ellipse(sq.x + 50, sq.y + 70, 48, 14, 0, 0, Math.PI * 2);
+      ctx.fillStyle = 'rgba(0, 0, 0, 0.45)';
+      ctx.fill();
+
+      // Desenha o pelotão marchando
+      ctx.drawImage(SPRITES.droids, sq.x, sq.y);
+
+      // Anéis de Seleção Tática e Barra de Vida da Tropa
+      if (sq.selected) {
+        ctx.strokeStyle = '#22c55e';
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.ellipse(sq.x + 50, sq.y + 70, 52, 16, 0, 0, Math.PI * 2);
+        ctx.stroke();
+
+        ctx.fillStyle = 'rgba(0, 0, 0, 0.8)';
+        ctx.fillRect(sq.x + 20, sq.y - 10, 60, 6);
+        ctx.fillStyle = '#22c55e';
+        ctx.fillRect(sq.x + 21, sq.y - 9, 58 * (sq.hp / sq.maxHp), 4);
+      }
+      ctx.restore();
+    }
+
     ctx.restore();
 
-    // 3. TERRENO ISOMÉTRICO PLANETÁRIO
-    for (let gx = 0; gx < GRID_SIZE; gx++) {
-      for (let gy = 0; gy < GRID_SIZE; gy++) {
-        // Círculo de corte do asteroide
-        if (Math.hypot(gx - GRID_SIZE / 2, gy - GRID_SIZE / 2) > (GRID_SIZE / 2) - 1) continue;
-
-        const pos = gridToScreen(gx, gy);
-        if (pos.x < -80 || pos.x > canvas.width + 80 || pos.y < -80 || pos.y > canvas.height + 80) continue;
-
-        const cell = state.terrain[gx][gy];
-        let tileImg = ASSETS.tile_planet;
-        if (cell.type === 'ROAD') tileImg = ASSETS.tile_road;
-        else if (cell.type === 'CRATER') tileImg = ASSETS.tile_crater;
-        else if (cell.type === 'WATER') tileImg = ASSETS.tile_water;
-
-        if (tileImg && tileImg.complete && tileImg.naturalWidth > 0) {
-          ctx.drawImage(tileImg, pos.x - halfW, pos.y, TILE_W * z, TILE_H * z);
-        }
-      }
-    }
-
-    // 4. CURSOR HOVER
-    const hPos = gridToScreen(state.hoveredGrid.x, state.hoveredGrid.y);
-    if (state.hoveredGrid.x >= 0 && state.hoveredGrid.x < GRID_SIZE && state.hoveredGrid.y >= 0 && state.hoveredGrid.y < GRID_SIZE) {
-      ctx.beginPath();
-      ctx.moveTo(hPos.x, hPos.y);
-      ctx.lineTo(hPos.x + halfW, hPos.y + halfH);
-      ctx.lineTo(hPos.x, hPos.y + halfH * 2);
-      ctx.lineTo(hPos.x - halfW, hPos.y + halfH);
-      ctx.closePath();
-      ctx.strokeStyle = '#00e5ff';
-      ctx.lineWidth = 2;
-      ctx.stroke();
-    }
-
-    // 5. MODO DE CONSTRUÇÃO (PREVIEW)
-    if (state.placementMode) {
-      const p = state.placementMode;
-      const gx = state.hoveredGrid.x;
-      const gy = state.hoveredGrid.y;
-      for (let x = 0; x < p.w; x++) {
-        for (let y = 0; y < p.h; y++) {
-          const tPos = gridToScreen(gx + x, gy + y);
-          ctx.beginPath();
-          ctx.moveTo(tPos.x, tPos.y);
-          ctx.lineTo(tPos.x + halfW, tPos.y + halfH);
-          ctx.lineTo(tPos.x, tPos.y + halfH * 2);
-          ctx.lineTo(tPos.x - halfW, tPos.y + halfH);
-          ctx.closePath();
-          ctx.fillStyle = 'rgba(34, 197, 94, 0.5)';
-          ctx.fill();
-          ctx.strokeStyle = '#22c55e';
-          ctx.lineWidth = 2;
-          ctx.stroke();
-        }
-      }
-    }
-
-    // 6. ENTIDADES COM Y-SORTING (Edifícios e Starlings)
-    const renderList = [];
-
-    for (const bld of state.buildings) {
-      renderList.push({ type: 'BUILDING', depth: (bld.gridX + bld.w - 1) + (bld.gridY + bld.h - 1), obj: bld });
-    }
-
-    for (const c of state.citizens) {
-      c.gridX += c.dir * c.speed;
-      if (c.gridX > 25) { c.gridX = 25; c.dir = -1; }
-      if (c.gridX < 10) { c.gridX = 10; c.dir = 1; }
-      renderList.push({ type: 'CITIZEN', depth: c.gridX + c.gridY, obj: c });
-    }
-
-    renderList.sort((a, b) => a.depth - b.depth);
-
-    for (const item of renderList) {
-      if (item.type === 'BUILDING') renderBuilding(item.obj, z);
-      else if (item.type === 'CITIZEN') renderCitizen(item.obj, z);
-    }
+    // 4. ATUALIZAÇÃO DO RADAR MINIMAP (Star Wars Ornate Diamond)
+    renderMinimap();
 
     requestAnimationFrame(render);
   }
 
-  // Renderiza Edifício Cartoon Galaxy Life
-  function renderBuilding(bld, z) {
-    const footCenterX = bld.gridX + bld.w / 2;
-    const footCenterY = bld.gridY + bld.h / 2;
-    const pos = gridToScreen(footCenterX, footCenterY);
+  // ============================================================
+  // RADAR MINIMAP (AUTÊNTICO STAR WARS GALACTIC BATTLEGROUNDS)
+  // ============================================================
+  function renderMinimap() {
+    const mw = minimapCanvas.width;
+    const mh = minimapCanvas.height;
 
-    const isSelected = state.selectedBuilding && state.selectedBuilding.id === bld.id;
+    miniCtx.clearRect(0, 0, mw, mh);
 
-    // Anel de Seleção Neon
-    if (isSelected) {
-      ctx.save();
-      ctx.beginPath();
-      const rw = (bld.w * TILE_W * 0.45) * z;
-      const rh = (bld.h * TILE_H * 0.45) * z;
-      ctx.ellipse(pos.x, pos.y, rw, rh, 0, 0, Math.PI * 2);
-      ctx.strokeStyle = '#00e5ff';
-      ctx.lineWidth = 3;
-      ctx.shadowColor = '#00e5ff';
-      ctx.shadowBlur = 12;
-      ctx.stroke();
-      ctx.restore();
+    // Fundo do radar
+    miniCtx.save();
+    miniCtx.fillStyle = 'rgba(10, 8, 4, 0.85)';
+    miniCtx.beginPath();
+    miniCtx.moveTo(mw / 2, 4);
+    miniCtx.lineTo(mw - 6, mh / 2);
+    miniCtx.lineTo(mw / 2, mh - 6);
+    miniCtx.lineTo(6, mh / 2);
+    miniCtx.closePath();
+    miniCtx.fill();
+    miniCtx.strokeStyle = '#c69224';
+    miniCtx.lineWidth = 2;
+    miniCtx.stroke();
+
+    // Rio Naboo em azul
+    miniCtx.strokeStyle = '#0284c7';
+    miniCtx.lineWidth = 4;
+    miniCtx.beginPath();
+    miniCtx.moveTo(20, mh / 2 - 20);
+    miniCtx.lineTo(mw / 2 + 20, 20);
+    miniCtx.stroke();
+
+    // Avenida em marrom
+    miniCtx.strokeStyle = '#854d0e';
+    miniCtx.lineWidth = 6;
+    miniCtx.beginPath();
+    miniCtx.moveTo(30, mh - 30);
+    miniCtx.lineTo(mw - 30, 30);
+    miniCtx.stroke();
+
+    // Edifícios em verde
+    miniCtx.fillStyle = '#16a34a';
+    for (const b of state.buildings) {
+      const mx = (b.x / 944) * (mw - 40) + 20;
+      const my = (b.y / 492) * (mh - 40) + 20;
+      miniCtx.fillRect(mx, my, 4, 4);
     }
 
-    const sprite = ASSETS[bld.spriteKey];
-    if (sprite && sprite.complete && sprite.naturalWidth > 0) {
-      const sw = sprite.naturalWidth * z;
-      const sh = sprite.naturalHeight * z;
-      const drawX = pos.x - (bld.anchorX * z);
-      const drawY = pos.y - (bld.anchorY * z);
+    // Tropa em verde brilhante
+    const sqX = (state.squad.x / 944) * (mw - 40) + 20;
+    const sqY = (state.squad.y / 492) * (mh - 40) + 20;
+    miniCtx.fillStyle = '#4ade80';
+    miniCtx.beginPath();
+    miniCtx.arc(sqX, sqY, 3, 0, Math.PI * 2);
+    miniCtx.fill();
 
-      ctx.drawImage(sprite, drawX, drawY, sw, sh);
+    // Caixa de visão da câmera
+    const viewW = (canvas.width / (944 * state.camera.zoom)) * 30;
+    const viewH = (canvas.height / (492 * state.camera.zoom)) * 20;
+    miniCtx.strokeStyle = '#ffffff';
+    miniCtx.lineWidth = 1;
+    miniCtx.strokeRect(sqX - viewW / 2, sqY - viewH / 2, viewW, viewH);
 
-      // BOLHA FLUTUANTE DE COLETA (Ícone 3D Saltando)
-      if (bld.readyHarvest) {
-        const bounce = Math.sin(tick * 0.08) * 8;
-        const bubbleImg = (bld.resType === 'gold') ? ASSETS.bubble_gold : ASSETS.bubble_min;
-        if (bubbleImg && bubbleImg.complete) {
-          const bw = 46 * z;
-          const bh = 46 * z;
-          const bx = pos.x - bw / 2;
-          const by = drawY - 20 * z + bounce;
-          ctx.drawImage(bubbleImg, bx, by, bw, bh);
-        }
-      }
-
-      // Nível do Edifício (Badge Galaxy Life)
-      ctx.save();
-      ctx.fillStyle = '#0f172a';
-      ctx.strokeStyle = '#f59e0b';
-      ctx.lineWidth = 1.5;
-      const badgeY = drawY + 10 * z;
-      ctx.beginPath();
-      ctx.arc(pos.x, badgeY, 11 * z, 0, Math.PI * 2);
-      ctx.fill();
-      ctx.stroke();
-      ctx.fillStyle = '#fff';
-      ctx.font = `bold ${Math.max(9, Math.floor(10 * z))}px sans-serif`;
-      ctx.textAlign = 'center';
-      ctx.fillText(`Nv${bld.lvl}`, pos.x, badgeY + 4 * z);
-      ctx.restore();
-    }
+    miniCtx.restore();
   }
 
-  // Renderiza Starling Animado
-  function renderCitizen(c, z) {
-    const pos = gridToScreen(c.gridX, c.gridY);
-    const frame = Math.floor(tick / 8) % 4;
-    const prefix = (c.type === 'STARLING') ? 'starling' : 'soldier';
-    const sprite = ASSETS[`${prefix}_${frame}`];
-
-    if (sprite && sprite.complete && sprite.naturalWidth > 0) {
-      const sw = sprite.naturalWidth * z;
-      const sh = sprite.naturalHeight * z;
-      ctx.save();
-      if (c.dir < 0) {
-        ctx.translate(pos.x, pos.y);
-        ctx.scale(-1, 1);
-        ctx.drawImage(sprite, -40 * z, -66 * z, sw, sh);
-      } else {
-        ctx.drawImage(sprite, pos.x - 40 * z, pos.y - 66 * z, sw, sh);
-      }
-      ctx.restore();
-    }
-  }
+  // Clique no Radar para Salto de Câmera
+  minimapCanvas.addEventListener('click', (e) => {
+    const rect = minimapCanvas.getBoundingClientRect();
+    const cx = (e.clientX - rect.left) / minimapCanvas.width;
+    const cy = (e.clientY - rect.top) / minimapCanvas.height;
+    state.camera.targetX = (canvas.width / 2) - (cx * 944);
+    state.camera.targetY = (canvas.height / 2) - (cy * 492);
+  });
 
   // ============================================================
-  // INTERAÇÕES, COLETA E TOQUE
+  // INTERAÇÕES, COMANDOS E TOQUE
   // ============================================================
   canvas.addEventListener('mousedown', (e) => {
     state.camera.isDragging = true;
@@ -1068,9 +825,6 @@
   });
 
   window.addEventListener('mousemove', (e) => {
-    const mouseGrid = screenToGrid(e.clientX, e.clientY);
-    state.hoveredGrid = mouseGrid;
-
     if (!state.camera.isDragging) return;
     const dx = e.clientX - state.camera.lastX;
     const dy = e.clientY - state.camera.lastY;
@@ -1082,263 +836,190 @@
 
   window.addEventListener('mouseup', () => { state.camera.isDragging = false; });
 
-  // Clique no Canvas (Coleta de Recursos ou Seleção de Edifício)
+  // Clique no Campo de Batalha: Comandar Tropas ou Selecionar Edifícios
   canvas.addEventListener('click', (e) => {
-    const clickGrid = screenToGrid(e.clientX, e.clientY);
+    // Coordenadas relativas ao mundo do jogo
+    const worldX = (e.clientX - state.camera.x) / state.camera.zoom;
+    const worldY = (e.clientY - state.camera.y) / state.camera.zoom;
 
-    // Se estiver posicionando obra
-    if (state.placementMode) {
-      const p = state.placementMode;
-      if (state.gold < p.goldCost || state.minerals < p.minCost) {
-        showToast('⚠️ Moedas ou Minerais insuficientes!');
-        return;
-      }
-
-      state.gold -= p.goldCost;
-      state.minerals -= p.minCost;
-
-      let spriteKey = 'extractor';
-      let anchorX = 96;
-      let anchorY = 155;
-      if (p.type === 'BANK') { spriteKey = 'bank'; }
-      else if (p.type === 'BARRACKS') { spriteKey = 'barracks'; }
-      else if (p.type === 'CANNON') { spriteKey = 'cannon'; anchorX = 64; anchorY = 130; }
-
-      const newBld = {
-        id: `bld_${Date.now()}`,
-        type: p.type,
-        name: p.type === 'EXTRACTOR' ? 'Extrator de Minerais' : (p.type === 'BANK' ? 'Banco Galáctico' : (p.type === 'BARRACKS' ? 'Quartel' : 'Canhão Plasma')),
-        lvl: 1,
-        gridX: clickGrid.x,
-        gridY: clickGrid.y,
-        w: p.w,
-        h: p.h,
-        hp: 1200,
-        maxHp: 1200,
-        spriteKey,
-        anchorX,
-        anchorY,
-        readyHarvest: false
-      };
-
-      state.buildings.push(newBld);
-      state.placementMode = null;
-      playPopSound(580);
-      spawnFloatNumber(e.clientX, e.clientY, 'Obra Erguida!');
-      showToast(`🚀 ${newBld.name} instalado na colônia!`);
-      updateHud();
-      return;
-    }
-
-    // Verifica clique em edifícios
+    // Se clicou em um edifício
     for (const bld of state.buildings) {
       if (
-        clickGrid.x >= bld.gridX &&
-        clickGrid.x < bld.gridX + bld.w &&
-        clickGrid.y >= bld.gridY &&
-        clickGrid.y < bld.gridY + bld.h
+        worldX >= bld.x &&
+        worldX <= bld.x + bld.w &&
+        worldY >= bld.y &&
+        worldY <= bld.y + bld.h
       ) {
-        // Se a bolha de coleta estava ativa, colhe!
-        if (bld.readyHarvest) {
-          bld.readyHarvest = false;
-          playHarvestChime();
-          if (bld.resType === 'gold') {
-            state.gold += 350;
-            spawnFloatNumber(e.clientX, e.clientY, '+350 🪙');
-          } else {
-            state.minerals += 300;
-            spawnFloatNumber(e.clientX, e.clientY, '+300 ⚡');
-          }
-          updateHud();
-          return;
-        }
-
-        // Seleciona o edifício e abre card de contexto
-        state.selectedBuilding = bld;
-        openBuildingCard(bld);
-        playPopSound(440);
+        selectBuilding(bld);
+        playTacticalBeep(520);
         return;
       }
     }
 
-    // Clicou fora: fecha o card
-    state.selectedBuilding = null;
-    document.getElementById('gl-building-card').style.display = 'none';
+    // Se clicou no chão com tropas selecionadas: move o pelotão lá!
+    if (state.squad.selected) {
+      state.squad.targetX = worldX - 50;
+      state.squad.targetY = worldY - 40;
+
+      // Cria efeito de Ping visual onde clicou
+      createWaypointPing(e.clientX, e.clientY);
+      playOrderVoice();
+      showToast(`🎯 Ordem de Marcha enviada: (${Math.floor(worldX)}, ${Math.floor(worldY)})`);
+    }
+
+    // Deseleciona edifício e volta para o tray de tropas
+    selectSquad();
   });
+
+  function selectBuilding(bld) {
+    state.selectedBuilding = bld;
+    state.squad.selected = false;
+
+    document.getElementById('swgb-unit-grid').style.display = 'none';
+    const card = document.getElementById('swgb-bld-card');
+    card.style.display = 'flex';
+    document.getElementById('bld-name').textContent = bld.name;
+    document.getElementById('bld-desc').textContent = `${bld.type} • HP: ${bld.hp}/${bld.maxHp}`;
+    document.getElementById('bld-thumb-img').src = ASSET_LIST[bld.spriteKey];
+  }
+
+  function selectSquad() {
+    state.selectedBuilding = null;
+    state.squad.selected = true;
+
+    document.getElementById('swgb-bld-card').style.display = 'none';
+    document.getElementById('swgb-unit-grid').style.display = 'grid';
+  }
+
+  function createWaypointPing(x, y) {
+    const ping = document.createElement('div');
+    ping.className = 'waypoint-ping';
+    ping.style.left = `${x}px`;
+    ping.style.top = `${y}px`;
+    document.body.appendChild(ping);
+    setTimeout(() => ping.remove(), 600);
+  }
 
   // Zoom do Mouse Wheel
   canvas.addEventListener('wheel', (e) => {
     e.preventDefault();
-    const factor = e.deltaY < 0 ? 1.12 : 0.88;
-    state.camera.targetZoom = Math.max(0.7, Math.min(2.0, state.camera.targetZoom * factor));
+    const factor = e.deltaY < 0 ? 1.15 : 0.85;
+    state.camera.targetZoom = Math.max(0.6, Math.min(2.0, state.camera.targetZoom * factor));
   }, { passive: false });
 
-  // Mobile Touch Pan & Pinch Zoom
-  let touchDist = 0;
-  canvas.addEventListener('touchstart', (e) => {
-    if (e.touches.length === 1) {
-      state.camera.isDragging = true;
-      state.camera.lastX = e.touches[0].clientX;
-      state.camera.lastY = e.touches[0].clientY;
-    } else if (e.touches.length === 2) {
-      touchDist = Math.hypot(
-        e.touches[0].clientX - e.touches[1].clientX,
-        e.touches[0].clientY - e.touches[1].clientY
-      );
-    }
-  });
-
-  canvas.addEventListener('touchmove', (e) => {
-    if (e.touches.length === 1 && state.camera.isDragging) {
-      const dx = e.touches[0].clientX - state.camera.lastX;
-      const dy = e.touches[0].clientY - state.camera.lastY;
-      state.camera.targetX += dx;
-      state.camera.targetY += dy;
-      state.camera.lastX = e.touches[0].clientX;
-      state.camera.lastY = e.touches[0].clientY;
-    } else if (e.touches.length === 2) {
-      const dist = Math.hypot(
-        e.touches[0].clientX - e.touches[1].clientX,
-        e.touches[0].clientY - e.touches[1].clientY
-      );
-      state.camera.targetZoom = Math.max(0.7, Math.min(2.0, state.camera.targetZoom * (dist / touchDist)));
-      touchDist = dist;
-    }
-  });
-
-  canvas.addEventListener('touchend', () => { state.camera.isDragging = false; });
-
-  // ============================================================
-  // FUNÇÕES DE UI E MECÂNICAS GALAXY LIFE
-  // ============================================================
-  function openBuildingCard(bld) {
-    const card = document.getElementById('gl-building-card');
-    document.getElementById('card-bld-title').textContent = bld.name;
-    document.getElementById('card-bld-desc').textContent = `Nível ${bld.lvl} • ${bld.hp}/${bld.maxHp} HP`;
-    document.getElementById('card-bld-img').src = ASSET_PATHS[bld.spriteKey];
-    card.style.display = 'flex';
+  // Comandos Táticos do Matrix
+  function orderAttack() {
+    showToast('⚔️ Modo Ofensivo Engajado: Destruir todas as unidades hostis!');
+    playOrderVoice();
   }
 
-  function upgradeSelectedBuilding() {
-    if (!state.selectedBuilding) return;
-    const bld = state.selectedBuilding;
-    const cost = bld.lvl * 800;
+  function orderStop() {
+    state.squad.targetX = state.squad.x;
+    state.squad.targetY = state.squad.y;
+    showToast('🛑 Pelotão em Posição de Guarda!');
+    playTacticalBeep(400);
+  }
 
-    if (state.gold < cost) {
-      showToast(`⚠️ Moedas insuficientes para melhorar (Requer ${cost} 🪙)`);
+  function orderPatrol() {
+    state.squad.targetX = 180;
+    state.squad.targetY = 220;
+    showToast('🛡️ Iniciando Patrulha Tática pela Avenida Principal de Theed!');
+    playOrderVoice();
+  }
+
+  function changeFormation(f) {
+    state.squad.formation = f;
+    showToast(`📐 Formação Alterada para: ${f}!`);
+    playTacticalBeep(580);
+  }
+
+  function trainBattalion() {
+    if (state.food < 150 || state.carbon < 80) {
+      showToast('⚠️ Alimento ou Carbono insuficientes para recrutar!');
       return;
     }
-
-    state.gold -= cost;
-    bld.lvl += 1;
-    bld.maxHp += 400;
-    bld.hp = bld.maxHp;
-
-    playHarvestChime();
-    showToast(`⭐ ${bld.name} evoluiu para o Nível ${bld.lvl}!`);
-    document.getElementById('card-bld-desc').textContent = `Nível ${bld.lvl} • ${bld.hp}/${bld.maxHp} HP`;
+    state.food -= 150;
+    state.carbon -= 80;
+    state.population = Math.min(75, state.population + 4);
     updateHud();
+    playOrderVoice();
+    showToast('🛡️ +4 Droids de Combate B1 incorporados ao Exército!');
   }
 
-  function showBuildingInfo() {
+  function repairBuilding() {
     if (!state.selectedBuilding) return;
-    showToast(`ℹ️ ${state.selectedBuilding.name} operacional com 100% de eficiência!`);
+    state.selectedBuilding.hp = state.selectedBuilding.maxHp;
+    showToast(`🔧 ${state.selectedBuilding.name} reparado para 100% de integridade!`);
+    playTacticalBeep(650);
   }
 
-  // Gera bolhas de coleta automaticamente a cada 8 segundos
-  setInterval(() => {
-    for (const b of state.buildings) {
-      if (b.type === 'EXTRACTOR' || b.type === 'BANK') {
-        b.readyHarvest = true;
-      }
-    }
-  }, 8000);
-
-  function startPlacement(type, w, h, goldCost, minCost) {
-    closeModal('modal-shop');
-    state.placementMode = { type, w, h, goldCost, minCost };
-    showToast('Toque no terreno do planeta para confirmar a instalação.');
+  function buildDefense(name) {
+    closeModal('modal-build');
+    showToast(`🔨 ${name} construído e guarnecido no setor defensivo!`);
+    playOrderVoice();
   }
 
-  function openShopModal() { document.getElementById('modal-shop').style.display = 'flex'; }
-  function openAttackModal() { document.getElementById('modal-attack').style.display = 'flex'; }
-  function openAllianceModal() { document.getElementById('modal-alliance').style.display = 'flex'; }
+  function startBattle(name, fReward, cReward, nReward) {
+    closeModal('modal-campaign');
+    state.food += fReward;
+    state.carbon += cReward;
+    state.nova += nReward;
+    updateHud();
+    playFanfare();
+    showToast(`🏆 Vitória Esmagadora em "${name}"! Espólio Creditado!`);
+  }
+
+  function openBuildModal() { document.getElementById('modal-build').style.display = 'flex'; }
+  function openCampaignModal() { document.getElementById('modal-campaign').style.display = 'flex'; }
   function closeModal(id) { document.getElementById(id).style.display = 'none'; }
 
   function showToast(msg) {
-    const toast = document.getElementById('gl-toast');
-    toast.textContent = msg;
-    toast.style.display = 'block';
-    setTimeout(() => { toast.style.display = 'none'; }, 3500);
-  }
-
-  function spawnFloatNumber(x, y, text) {
-    const el = document.createElement('div');
-    el.className = 'float-number';
-    el.style.left = `${x}px`;
-    el.style.top = `${y}px`;
-    el.textContent = text;
-    document.body.appendChild(el);
-    setTimeout(() => el.remove(), 800);
+    const t = document.getElementById('sw-toast');
+    t.textContent = msg;
+    t.style.display = 'block';
+    setTimeout(() => { t.style.display = 'none'; }, 3500);
   }
 
   function updateHud() {
-    document.getElementById('val-gold').textContent = Math.floor(state.gold).toLocaleString();
-    document.getElementById('val-minerals').textContent = Math.floor(state.minerals).toLocaleString();
-    document.getElementById('val-chips').textContent = state.chips;
+    document.getElementById('val-food').textContent = Math.floor(state.food).toLocaleString();
+    document.getElementById('val-carbon').textContent = Math.floor(state.carbon).toLocaleString();
+    document.getElementById('val-ore').textContent = Math.floor(state.ore).toLocaleString();
+    document.getElementById('val-nova').textContent = state.nova;
+    document.getElementById('val-pop').textContent = `${state.population}/75`;
   }
 
-  function launchRaid(target, goldReward, minReward, chipsBonus = 0) {
-    const box = document.getElementById('raid-live-box');
-    box.style.display = 'block';
-    box.innerHTML = `🚀 [LANÇANDO CÁPSULAS DE ASSALTO CONTRA ${target.toUpperCase()}]<br>`;
-
-    setTimeout(() => {
-      box.innerHTML += '💥 [T+3s] Canhões de plasma inimigos engajados! Tropas avançam...<br>';
-    }, 400);
-
-    setTimeout(() => {
-      box.innerHTML += '🔥 [T+8s] Extratores e Base Inimiga destruídos!<br>';
-      box.innerHTML += '<b style="color: #fde047;">⭐ ⭐ ⭐ 3 ESTRELAS (100% Destruição da Colônia)</b><br>';
-      box.innerHTML += `<span style="color: #38bdf8;">💰 Espólio Saqueado: +${goldReward.toLocaleString()} Moedas, +${minReward.toLocaleString()} Minerais!</span>`;
-
-      state.gold += goldReward;
-      state.minerals += minReward;
-      state.chips += chipsBonus;
-      updateHud();
-      playHarvestChime();
-      showToast(`🏆 Vitória Esmagadora em ${target}! 3 Estrelas!`);
-    }, 1600);
-  }
-
-  // Efeitos Sonoros Web Audio API (Juicy & Cartoon)
+  // Síntese de Áudio Tático Star Wars (Web Audio API)
   let audioCtx = null;
   function getAudio() {
     if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
     return audioCtx;
   }
 
-  function playPopSound(freq = 440) {
+  function playTacticalBeep(freq = 440) {
     try {
       const ac = getAudio();
       const osc = ac.createOscillator();
       const gain = ac.createGain();
       osc.type = 'sine';
       osc.frequency.setValueAtTime(freq, ac.currentTime);
-      gain.gain.setValueAtTime(0.2, ac.currentTime);
-      gain.gain.exponentialRampToValueAtTime(0.001, ac.currentTime + 0.15);
+      gain.gain.setValueAtTime(0.15, ac.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.001, ac.currentTime + 0.12);
       osc.connect(gain);
       gain.connect(ac.destination);
       osc.start();
-      osc.stop(ac.currentTime + 0.15);
+      osc.stop(ac.currentTime + 0.12);
     } catch (_) {}
   }
 
-  function playHarvestChime() {
-    playPopSound(523.25); // C5
-    setTimeout(() => playPopSound(659.25), 100); // E5
-    setTimeout(() => playPopSound(783.99), 200); // G5
-    setTimeout(() => playPopSound(1046.50), 300); // C6
+  function playOrderVoice() {
+    playTacticalBeep(480);
+    setTimeout(() => playTacticalBeep(620), 80);
+  }
+
+  function playFanfare() {
+    playTacticalBeep(520);
+    setTimeout(() => playTacticalBeep(650), 120);
+    setTimeout(() => playTacticalBeep(780), 240);
   }
 
   updateHud();

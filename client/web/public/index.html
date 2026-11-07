@@ -125,6 +125,28 @@
     .res-pill.iron { color: #93c5fd; }
     .res-pill.gems { color: #38bdf8; }
 
+    .btn-download-apk {
+      background: linear-gradient(135deg, #10b981, #059669);
+      color: #fff;
+      text-decoration: none;
+      padding: 6px 14px;
+      border-radius: 20px;
+      font-size: 12px;
+      font-weight: bold;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      border: 1px solid #34d399;
+      box-shadow: 0 2px 10px rgba(16, 185, 129, 0.4);
+      transition: all 0.2s;
+    }
+
+    .btn-download-apk:hover {
+      background: linear-gradient(135deg, #059669, #047857);
+      transform: translateY(-2px);
+      box-shadow: 0 4px 14px rgba(16, 185, 129, 0.6);
+    }
+
     /* Coordinate & Camera info */
     .coord-overlay {
       position: absolute;
@@ -354,8 +376,11 @@
       <div class="civ-flag">🏛️</div>
       <div class="civ-info">
         <h1>IMPÉRIO PERSA (AQUEMÊNIDA)</h1>
-        <span>Fase 2: Bioma Persa • Estrada Real • Grade 40x40 • 🛡️ Escudo 24h</span>
+        <span>Bioma Persa • Estrada Real • Grade 40x40 • 🛡️ Escudo 24h</span>
       </div>
+      <a href="/downloads/imperios.apk" download="imperios.apk" class="btn-download-apk" title="Baixar APK Android oficial para instalar no celular">
+        <span>🤖</span> Baixar APK Android (v1.0.0)
+      </a>
     </div>
 
     <div class="resources-bar">

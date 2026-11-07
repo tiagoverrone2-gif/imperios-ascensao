@@ -1,0 +1,1257 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>IMPÉRIOS — Ascensão das Civilizações (Fase 2: Terreno & Câmera Isométrica)</title>
+  <style>
+    :root {
+      --bg-dark: #0a0f14;
+      --persian-blue: #1d3557;
+      --persian-gold: #d4af37;
+      --persian-gold-light: #f3e5ab;
+      --persian-crimson: #a61c1c;
+      --persian-turquoise: #2a9d8f;
+      --panel-bg: rgba(14, 22, 32, 0.96);
+      --border-gold: #c59b27;
+      --text-main: #f0f3f6;
+      --text-muted: #9baec2;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      user-select: none;
+      -webkit-user-select: none;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
+
+    body, html {
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      background-color: var(--bg-dark);
+      color: var(--text-main);
+    }
+
+    #game-container {
+      position: relative;
+      width: 100vw;
+      height: 100vh;
+      overflow: hidden;
+    }
+
+    canvas#isometric-canvas {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      touch-action: none;
+      cursor: crosshair;
+    }
+
+    /* Top HUD */
+    .top-bar {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      background: linear-gradient(180deg, rgba(10, 15, 20, 0.98) 0%, rgba(10, 15, 20, 0.75) 85%, transparent 100%);
+      padding: 10px 18px;
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+      z-index: 10;
+      border-bottom: 2px solid rgba(212, 175, 55, 0.4);
+    }
+
+    .civ-badge {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .civ-flag {
+      width: 40px;
+      height: 40px;
+      border-radius: 8px;
+      background: linear-gradient(135deg, var(--persian-crimson), var(--persian-gold));
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      font-size: 20px;
+      border: 1px solid var(--border-gold);
+      box-shadow: 0 0 12px rgba(212, 175, 55, 0.4);
+    }
+
+    .civ-info h1 {
+      font-size: 15px;
+      color: var(--persian-gold-light);
+      letter-spacing: 0.6px;
+    }
+
+    .civ-info span {
+      font-size: 11px;
+      color: var(--text-muted);
+    }
+
+    .resources-bar {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .res-pill {
+      background: rgba(0, 0, 0, 0.6);
+      border: 1px solid rgba(212, 175, 55, 0.35);
+      border-radius: 18px;
+      padding: 5px 12px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 12px;
+      font-weight: 600;
+    }
+
+    .res-pill.gold { color: #f9d71c; }
+    .res-pill.food { color: #a3e635; }
+    .res-pill.wood { color: #fb923c; }
+    .res-pill.stone { color: #cbd5e1; }
+    .res-pill.iron { color: #93c5fd; }
+    .res-pill.gems { color: #38bdf8; }
+
+    .btn-download-apk {
+      background: linear-gradient(135deg, #10b981, #059669);
+      color: #fff;
+      text-decoration: none;
+      padding: 6px 14px;
+      border-radius: 20px;
+      font-size: 12px;
+      font-weight: bold;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      border: 1px solid #34d399;
+      box-shadow: 0 2px 10px rgba(16, 185, 129, 0.4);
+      transition: all 0.2s;
+    }
+
+    .btn-download-apk:hover {
+      background: linear-gradient(135deg, #059669, #047857);
+      transform: translateY(-2px);
+      box-shadow: 0 4px 14px rgba(16, 185, 129, 0.6);
+    }
+
+    /* Coordinate & Camera info */
+    .coord-overlay {
+      position: absolute;
+      top: 65px;
+      left: 18px;
+      background: rgba(0, 0, 0, 0.7);
+      border: 1px solid rgba(212, 175, 55, 0.3);
+      padding: 6px 12px;
+      border-radius: 8px;
+      font-size: 11px;
+      color: var(--persian-gold-light);
+      z-index: 5;
+      font-family: monospace;
+      pointer-events: none;
+    }
+
+    /* Bottom Control Bar */
+    .bottom-bar {
+      position: absolute;
+      bottom: 14px;
+      left: 50%;
+      transform: translateX(-50%);
+      display: flex;
+      gap: 12px;
+      z-index: 10;
+      background: var(--panel-bg);
+      border: 1px solid var(--border-gold);
+      border-radius: 30px;
+      padding: 6px 16px;
+      box-shadow: 0 8px 30px rgba(0, 0, 0, 0.85);
+    }
+
+    .btn-action {
+      background: linear-gradient(180deg, #2a4365, #1d3557);
+      color: #fff;
+      border: 1px solid var(--border-gold);
+      border-radius: 20px;
+      padding: 8px 18px;
+      font-size: 13px;
+      font-weight: bold;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      transition: all 0.2s ease;
+    }
+
+    .btn-action:hover {
+      background: linear-gradient(180deg, #3182ce, #2b6cb0);
+      transform: translateY(-2px);
+      box-shadow: 0 4px 14px rgba(212, 175, 55, 0.45);
+    }
+
+    .btn-action.battle {
+      background: linear-gradient(180deg, #c53030, #9b2c2c);
+      border-color: #f56565;
+    }
+
+    .btn-action.cancel-build {
+      background: linear-gradient(180deg, #4b5563, #374151);
+      border-color: #9ca3af;
+    }
+
+    /* Zoom & Center Tools */
+    .camera-tools {
+      position: absolute;
+      right: 18px;
+      bottom: 80px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      z-index: 10;
+    }
+
+    .btn-tool {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      background: var(--panel-bg);
+      border: 1px solid var(--border-gold);
+      color: var(--persian-gold-light);
+      font-size: 18px;
+      font-weight: bold;
+      cursor: pointer;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.6);
+      transition: all 0.2s;
+    }
+
+    .btn-tool:hover {
+      background: var(--persian-blue);
+      transform: scale(1.1);
+    }
+
+    /* Modal Windows */
+    .modal-overlay {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.8);
+      backdrop-filter: blur(5px);
+      display: none;
+      justify-content: center;
+      align-items: center;
+      z-index: 100;
+    }
+
+    .modal-card {
+      background: var(--panel-bg);
+      border: 2px solid var(--border-gold);
+      border-radius: 14px;
+      width: 90%;
+      max-width: 520px;
+      max-height: 85vh;
+      display: flex;
+      flex-direction: column;
+      box-shadow: 0 12px 40px rgba(0, 0, 0, 0.95);
+      overflow: hidden;
+    }
+
+    .modal-header {
+      background: linear-gradient(90deg, #1d3557, #132238);
+      padding: 14px 18px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 1px solid var(--border-gold);
+    }
+
+    .modal-header h2 {
+      font-size: 16px;
+      color: var(--persian-gold-light);
+    }
+
+    .modal-close {
+      background: transparent;
+      border: none;
+      color: #fff;
+      font-size: 22px;
+      cursor: pointer;
+    }
+
+    .modal-body {
+      padding: 18px;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+
+    .building-item, .unit-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: rgba(255, 255, 255, 0.04);
+      border: 1px solid rgba(212, 175, 55, 0.25);
+      border-radius: 10px;
+      padding: 12px 16px;
+      transition: background 0.2s;
+    }
+
+    .building-item:hover, .unit-item:hover {
+      background: rgba(212, 175, 55, 0.1);
+    }
+
+    .item-title {
+      font-weight: bold;
+      color: #fff;
+      font-size: 14px;
+      margin-bottom: 2px;
+    }
+
+    .item-desc {
+      font-size: 11px;
+      color: var(--text-muted);
+    }
+
+    .item-cost {
+      font-size: 11px;
+      color: var(--persian-gold-light);
+      margin-top: 4px;
+    }
+
+    /* Notification banner */
+    .toast-banner {
+      position: absolute;
+      top: 75px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: rgba(10, 15, 20, 0.96);
+      border: 1px solid var(--border-gold);
+      border-radius: 8px;
+      padding: 10px 24px;
+      color: #fff;
+      font-size: 13px;
+      font-weight: 500;
+      z-index: 1000;
+      display: none;
+      box-shadow: 0 4px 25px rgba(0, 0, 0, 0.9);
+      text-align: center;
+    }
+
+    .status-pill {
+      position: absolute;
+      bottom: 14px;
+      right: 18px;
+      background: rgba(0, 0, 0, 0.7);
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      padding: 5px 12px;
+      border-radius: 14px;
+      font-size: 11px;
+      color: #86efac;
+      z-index: 5;
+    }
+  </style>
+</head>
+<body>
+
+<div id="game-container">
+  <!-- Top Bar HUD -->
+  <div class="top-bar">
+    <div class="civ-badge">
+      <div class="civ-flag">🏛️</div>
+      <div class="civ-info">
+        <h1>IMPÉRIO PERSA (AQUEMÊNIDA)</h1>
+        <span>Bioma Persa • Estrada Real • Grade 40x40 • 🛡️ Escudo 24h</span>
+      </div>
+      <a href="/downloads/imperios.apk" download="imperios.apk" class="btn-download-apk" title="Baixar APK Android oficial para instalar no celular">
+        <span>🤖</span> Baixar APK Android (v1.0.0)
+      </a>
+    </div>
+
+    <div class="resources-bar">
+      <div class="res-pill food">🌾 <span id="val-food">1.000</span></div>
+      <div class="res-pill wood">🪵 <span id="val-wood">1.000</span></div>
+      <div class="res-pill stone">🪨 <span id="val-stone">800</span></div>
+      <div class="res-pill iron">⚙️ <span id="val-iron">500</span></div>
+      <div class="res-pill gold">🪙 <span id="val-gold">800</span></div>
+      <div class="res-pill gems">💎 <span id="val-gems">250</span></div>
+    </div>
+  </div>
+
+  <!-- Overlay de Coordenadas e Câmera -->
+  <div class="coord-overlay" id="coord-info">
+    Célula: (18, 18) | Terreno: Estrada Real | Zoom: 1.0x
+  </div>
+
+  <!-- Ferramentas da Câmera -->
+  <div class="camera-tools">
+    <button class="btn-tool" onclick="adjustZoom(1.2)" title="Aproximar Zoom">+</button>
+    <button class="btn-tool" onclick="adjustZoom(0.8)" title="Afastar Zoom">-</button>
+    <button class="btn-tool" onclick="centerCameraOnCenter()" title="Centralizar Apadana">🎯</button>
+  </div>
+
+  <!-- Canvas Isométrico -->
+  <canvas id="isometric-canvas"></canvas>
+
+  <!-- Bottom Control Bar -->
+  <div class="bottom-bar">
+    <button class="btn-action" id="btn-build" onclick="openBuildModal()">
+      <span>🔨</span> Construir
+    </button>
+    <button class="btn-action" onclick="openArmyModal()">
+      <span>⚔️</span> Quartel (<span id="army-count">15</span>)
+    </button>
+    <button class="btn-action" onclick="openPveModal()">
+      <span>🗺️</span> Campanha
+    </button>
+    <button class="btn-action" onclick="openAllianceModal()">
+      <span>🛡️</span> Aliança
+    </button>
+    <button class="btn-action" onclick="openStoreModal()">
+      <span>💎</span> Loja
+    </button>
+    <button class="btn-action battle" onclick="openBattleModal()">
+      <span>🔥</span> PvP
+    </button>
+  </div>
+
+  <div class="status-pill">
+    ● Cloudflare Edge: vilas.proton.ia.br / vilas-proton.pages.dev
+  </div>
+
+  <div id="toast" class="toast-banner">Notificação</div>
+
+  <!-- Modal Construção -->
+  <div id="modal-build" class="modal-overlay">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h2>🏛️ Arquitetura Persa Aquemênida</h2>
+        <button class="modal-close" onclick="closeModal('modal-build')">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div class="building-item">
+          <div>
+            <div class="item-title">Fazenda com Canais Qanat</div>
+            <div class="item-desc">Irrigação ancestral por galerias subterrâneas. (Dimensões 3x3)</div>
+            <div class="item-cost">Custo: 100 Madeira | +250 Alimento/hora</div>
+          </div>
+          <button class="btn-action" onclick="startBuildingPlacement('FAZENDA', 3, 3, 100, 0)">Posicionar</button>
+        </div>
+
+        <div class="building-item">
+          <div>
+            <div class="item-title">Serraria de Cedro Real</div>
+            <div class="item-desc">Corte de madeiras para fortificações imperiais. (Dimensões 3x3)</div>
+            <div class="item-cost">Custo: 80 Alimento, 50 Pedra | +200 Madeira/hora</div>
+          </div>
+          <button class="btn-action" onclick="startBuildingPlacement('SERRARIA', 3, 3, 0, 50)">Posicionar</button>
+        </div>
+
+        <div class="building-item">
+          <div>
+            <div class="item-title">Torre de Arqueiros de Susa</div>
+            <div class="item-desc">Bastião fortificado com flechas compostas. (Dimensões 2x2)</div>
+            <div class="item-cost">Custo: 250 Madeira, 250 Pedra | Defesa 35 DPS</div>
+          </div>
+          <button class="btn-action" onclick="startBuildingPlacement('TORRE_ARQUEIROS', 2, 2, 250, 250)">Posicionar</button>
+        </div>
+
+        <div class="building-item">
+          <div>
+            <div class="item-title">Armazém Imperial</div>
+            <div class="item-desc">Guarda segura de madeira, pedra e ferro. (Dimensões 3x3)</div>
+            <div class="item-cost">Custo: 300 Madeira, 100 Pedra | +8.000 Capacidade</div>
+          </div>
+          <button class="btn-action" onclick="startBuildingPlacement('ARMAZEM', 3, 3, 300, 100)">Posicionar</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal Tropas -->
+  <div id="modal-army" class="modal-overlay">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h2>⚔️ Guarda Imperial dos Dez Mil</h2>
+        <button class="modal-close" onclick="closeModal('modal-army')">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div class="unit-item">
+          <div>
+            <div class="item-title">Imortal Persa (Os Dez Mil)</div>
+            <div class="item-desc">Unidade única de elite com arco composto e lança com maçã de prata.</div>
+            <div class="item-cost">Custo: 120 Alimento, 60 Ferro, 40 Ouro</div>
+          </div>
+          <button class="btn-action" onclick="trainUnits('IMORTAL_PERSA', 5)">Recrutar +5</button>
+        </div>
+
+        <div class="unit-item">
+          <div>
+            <div class="item-title">Arqueiro de Pelotão</div>
+            <div class="item-desc">Atiradores de suporte com flechas de longo alcance.</div>
+            <div class="item-cost">Custo: 40 Alimento, 70 Madeira</div>
+          </div>
+          <button class="btn-action" onclick="trainUnits('ARQUEIRO', 5)">Recrutar +5</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal Batalha PvP -->
+  <div id="modal-battle" class="modal-overlay">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h2>🔥 Batalha PvP Assíncrona</h2>
+        <button class="modal-close" onclick="closeModal('modal-battle')">&times;</button>
+      </div>
+      <div class="modal-body" id="battle-content">
+        <div style="background: rgba(255, 255, 255, 0.05); padding: 14px; border-radius: 8px; border: 1px solid var(--border-gold);">
+          <h3 style="color: var(--persian-gold); font-size: 15px; margin-bottom: 6px;">Alvo Encontrado: Posto Babilônico</h3>
+          <p style="font-size: 12px; color: var(--text-muted); margin-bottom: 8px;">Guarnição inimiga detectada pelo serviço de inteligência sátrapa.</p>
+          <div style="font-size: 12px; color: #a3e635; margin-bottom: 12px;">Saque Estimado: 🪙 1.500 Ouro | 🌾 2.400 Alimento</div>
+          <button class="btn-action battle" style="width: 100%; justify-content: center;" onclick="executePvPAttack()">
+            Iniciar Ataque com a Guarda Imperial
+          </button>
+        </div>
+        <div id="battle-log" style="display: none; background: #000; padding: 10px; border-radius: 6px; font-family: monospace; font-size: 11px; max-height: 180px; overflow-y: auto;">
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal Campanha PvE -->
+  <div id="modal-pve" class="modal-overlay">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h2>🗺️ Campanha de Conquistas Históricas</h2>
+        <button class="modal-close" onclick="closeModal('modal-pve')">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div class="building-item">
+          <div>
+            <div class="item-title">1. Incursão das Tribos da Estepe</div>
+            <div class="item-desc">Bandos nômades ameaçam as caravanas aquemênidas.</div>
+            <div class="item-cost">Recompensa: 🌾 500, 🪵 500, 💎 25 Gemas</div>
+          </div>
+          <button class="btn-action battle" onclick="startPveBattle('Tribos da Estepe', 500, 500, 25)">Atacar</button>
+        </div>
+
+        <div class="building-item">
+          <div>
+            <div class="item-title">2. Posto Avançado de Susa</div>
+            <div class="item-desc">Rebelião militar nas margens da Estrada Real.</div>
+            <div class="item-cost">Recompensa: 🪙 600, 🌾 1.000, 💎 50 Gemas</div>
+          </div>
+          <button class="btn-action battle" onclick="startPveBattle('Posto de Susa', 1000, 600, 50)">Atacar</button>
+        </div>
+
+        <div class="building-item">
+          <div>
+            <div class="item-title">3. Os Portões de Ishtar (Babilônia)</div>
+            <div class="item-desc">A lendária conquista de Ciro, o Grande na Mesopotâmia.</div>
+            <div class="item-cost">Recompensa: 🪙 2.500, 🪨 2.000, 💎 100 Gemas</div>
+          </div>
+          <button class="btn-action battle" onclick="startPveBattle('Babilônia Imperial', 2000, 2500, 100)">Atacar</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal Aliança -->
+  <div id="modal-alliance" class="modal-overlay">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h2>🛡️ Alianças & Legiões</h2>
+        <button class="modal-close" onclick="closeModal('modal-alliance')">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div id="alliance-info" style="background: rgba(255,255,255,0.05); padding: 14px; border-radius: 8px; border: 1px solid var(--border-gold);">
+          <h3 style="color: var(--persian-gold); font-size: 15px; margin-bottom: 4px;">Guarda de Persépolis [PERS]</h3>
+          <p style="font-size: 12px; color: var(--text-muted); margin-bottom: 10px;">Líder: Grande Sátrapa • 34 Membros • Ranking #12 Global</p>
+          <div style="display: flex; gap: 8px;">
+            <button class="btn-action" style="flex: 1;" onclick="donateTroopsAlliance()">Doar 5 Imortais (+50 XP)</button>
+            <button class="btn-action" style="flex: 1;" onclick="showToast('💬 Chat da Aliança: Grande Sátrapa convocou todos para a guerra!')">Ver Chat</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal Loja -->
+  <div id="modal-store" class="modal-overlay">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h2>💎 Tesouro Imperial & Loja</h2>
+        <button class="modal-close" onclick="closeModal('modal-store')">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div class="unit-item">
+          <div>
+            <div class="item-title">Bolsa de 500 Gemas</div>
+            <div class="item-desc">Moeda de troca imperial com mercadores estrangeiros.</div>
+            <div class="item-cost">R$ 14,90 (Receba 500 Dáricos de Gemas)</div>
+          </div>
+          <button class="btn-action" onclick="buyStoreProduct('Gemas 500', 500, 0)">Comprar</button>
+        </div>
+
+        <div class="unit-item">
+          <div>
+            <div class="item-title">Cabana do 3º Construtor Imperial</div>
+            <div class="item-desc">Permite erguer mais uma obra simultaneamente.</div>
+            <div class="item-cost">R$ 29,90 (+250 Gemas de Bônus)</div>
+          </div>
+          <button class="btn-action" onclick="buyStoreProduct('3º Construtor', 250, 0)">Comprar</button>
+        </div>
+
+        <div class="unit-item">
+          <div>
+            <div class="item-title">Escudo Sagrado de Ahura Mazda (48h)</div>
+            <div class="item-desc">Proteção absoluta contra todos os ataques rivais.</div>
+            <div class="item-cost">R$ 19,90 (+48h de Escudo)</div>
+          </div>
+          <button class="btn-action" onclick="buyStoreProduct('Escudo 48h', 100, 48)">Comprar</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  // Constantes da Grade Isométrica 2:1
+  const GRID_SIZE = 40;
+  const TILE_W = 64;
+  const TILE_H = 32;
+
+  // Estado da Vila e Biomas Persas (Fase 2)
+  const state = {
+    food: 1000,
+    wood: 1000,
+    stone: 800,
+    iron: 500,
+    gold: 800,
+    gems: 250,
+    immortals: 15,
+    archers: 20,
+    // Matriz de Terreno
+    terrain: [],
+    // Edifícios
+    buildings: [
+      { id: 'bld_center', type: 'CENTRO_IMPERIAL', name: 'Apadana Imperial', gridX: 18, gridY: 18, w: 4, h: 4 },
+      { id: 'bld_farm', type: 'FAZENDA', name: 'Fazenda Qanat', gridX: 13, gridY: 18, w: 3, h: 3 },
+      { id: 'bld_sawmill', type: 'SERRARIA', name: 'Serraria Cedro', gridX: 24, gridY: 18, w: 3, h: 3 },
+      { id: 'bld_barracks', type: 'QUARTEL', name: 'Quartel Imortais', gridX: 18, gridY: 24, w: 3, h: 3 },
+      { id: 'bld_tower', type: 'TORRE_ARQUEIROS', name: 'Torre de Susa', gridX: 18, gridY: 14, w: 2, h: 2 }
+    ],
+    // Personagens navegando com Pathfinding A*
+    patrollingUnits: [
+      { id: 'p1', x: 18, y: 20, targetX: 30, targetY: 20, path: [], speed: 0.05, label: '🛡️ Imortal' },
+      { id: 'p2', x: 26, y: 20, targetX: 10, targetY: 20, path: [], speed: 0.04, label: '🏹 Arqueiro' }
+    ],
+    hoveredGrid: { x: 18, y: 18 },
+    placementPreview: null, // { type, w, h, woodCost, stoneCost }
+    camera: {
+      x: 0,
+      y: 0,
+      targetX: 0,
+      targetY: 0,
+      zoom: 1.0,
+      targetZoom: 1.0,
+      isDragging: false,
+      lastX: 0,
+      lastY: 0,
+      velX: 0,
+      velY: 0
+    }
+  };
+
+  // Inicializa a matriz de terreno persa com oásis, rochas e Estrada Real
+  function initTerrain() {
+    state.terrain = [];
+    for (let x = 0; x < GRID_SIZE; x++) {
+      state.terrain[x] = [];
+      for (let y = 0; y < GRID_SIZE; y++) {
+        let type = 'SAND'; // Areia persa padrão
+        let walkable = true;
+
+        // Oásis verdejante no quadrante nordeste (x: 4..8, y: 4..8)
+        if (Math.hypot(x - 6, y - 6) <= 3) {
+          type = 'OASIS';
+          walkable = false;
+        }
+        // Afloramento rochoso escarpado (x: 32..35, y: 6..9)
+        else if (Math.hypot(x - 33, y - 7) <= 2) {
+          type = 'ROCK';
+          walkable = false;
+        }
+        // A famosa Estrada Real de Dario I cruzando a vila (y: 20)
+        else if (y === 20 && x >= 2 && x <= 38) {
+          type = 'ROAD';
+        }
+        // Margens irrigadas do Qanat
+        else if (x >= 12 && x <= 16 && y >= 17 && y <= 21) {
+          type = 'FERTILE';
+        }
+
+        state.terrain[x][y] = { type, walkable };
+      }
+    }
+  }
+  initTerrain();
+
+  // Canvas e Renderizador
+  const canvas = document.getElementById('isometric-canvas');
+  const ctx = canvas.getContext('2d');
+
+  function resizeCanvas() {
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+    if (state.camera.x === 0 && state.camera.y === 0) {
+      centerCameraOnCenter();
+    }
+  }
+  window.addEventListener('resize', resizeCanvas);
+  resizeCanvas();
+
+  function centerCameraOnCenter() {
+    state.camera.targetX = canvas.width / 2;
+    state.camera.targetY = canvas.height / 2 - 120;
+    state.camera.x = state.camera.targetX;
+    state.camera.y = state.camera.targetY;
+    state.camera.targetZoom = 1.0;
+  }
+
+  function adjustZoom(factor) {
+    state.camera.targetZoom = Math.max(0.5, Math.min(2.5, state.camera.targetZoom * factor));
+  }
+
+  // Matemática de Projeção Isométrica 2:1
+  function gridToScreen(gx, gy) {
+    const isoX = (gx - gy) * (TILE_W / 2) * state.camera.zoom + state.camera.x;
+    const isoY = (gx + gy) * (TILE_H / 2) * state.camera.zoom + state.camera.y;
+    return { x: isoX, y: isoY };
+  }
+
+  function screenToGrid(sx, sy) {
+    const adjX = (sx - state.camera.x) / state.camera.zoom;
+    const adjY = (sy - state.camera.y) / state.camera.zoom;
+    const halfW = TILE_W / 2;
+    const halfH = TILE_H / 2;
+    const gx = Math.floor((adjX / halfW + adjY / halfH) / 2);
+    const gy = Math.floor((adjY / halfH - adjX / halfW) / 2);
+    return { x: gx, y: gy };
+  }
+
+  // Verificação de Validade de Posicionamento
+  function canPlaceBuildingAt(gx, gy, w, h) {
+    if (gx < 0 || gy < 0 || gx + w > GRID_SIZE || gy + h > GRID_SIZE) return false;
+
+    // Colisão com terreno bloqueado (água ou rocha)
+    for (let x = gx; x < gx + w; x++) {
+      for (let y = gy; y < gy + h; y++) {
+        if (!state.terrain[x][y].walkable && state.terrain[x][y].type !== 'ROAD') {
+          return false;
+        }
+      }
+    }
+
+    // Colisão com edifícios existentes
+    for (const bld of state.buildings) {
+      if (
+        gx < bld.gridX + bld.w &&
+        gx + w > bld.gridX &&
+        gy < bld.gridY + bld.h &&
+        gy + h > bld.gridY
+      ) {
+        return false;
+      }
+    }
+
+    return true;
+  }
+
+  // Loop de Animação e Renderização
+  let waterTick = 0;
+  function render() {
+    waterTick += 0.03;
+
+    // Amortecimento suave da câmera (Damping)
+    state.camera.x += (state.camera.targetX - state.camera.x) * 0.15 + state.camera.velX;
+    state.camera.y += (state.camera.targetY - state.camera.y) * 0.15 + state.camera.velY;
+    state.camera.zoom += (state.camera.targetZoom - state.camera.zoom) * 0.15;
+    state.camera.velX *= 0.88;
+    state.camera.velY *= 0.88;
+
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+    const z = state.camera.zoom;
+    const halfW = (TILE_W / 2) * z;
+    const halfH = (TILE_H / 2) * z;
+
+    // 1. Renderiza o Terreno (Grade Isométrica de 40x40 Células)
+    for (let gx = 0; gx < GRID_SIZE; gx++) {
+      for (let gy = 0; gy < GRID_SIZE; gy++) {
+        const pos = gridToScreen(gx, gy);
+
+        // Culling de tela
+        if (pos.x < -120 || pos.x > canvas.width + 120 || pos.y < -120 || pos.y > canvas.height + 120) continue;
+
+        const cell = state.terrain[gx][gy];
+
+        ctx.beginPath();
+        ctx.moveTo(pos.x, pos.y);
+        ctx.lineTo(pos.x + halfW, pos.y + halfH);
+        ctx.lineTo(pos.x, pos.y + halfH * 2);
+        ctx.lineTo(pos.x - halfW, pos.y + halfH);
+        ctx.closePath();
+
+        // Cores conforme bioma
+        if (cell.type === 'OASIS') {
+          const wave = Math.sin(waterTick + gx * 0.5 + gy * 0.5) * 8;
+          ctx.fillStyle = `rgb(24, ${110 + wave}, ${150 + wave})`;
+        } else if (cell.type === 'ROCK') {
+          ctx.fillStyle = '#475569';
+        } else if (cell.type === 'ROAD') {
+          ctx.fillStyle = '#78716c'; // Pedra calcária pavimentada
+        } else if (cell.type === 'FERTILE') {
+          ctx.fillStyle = '#365314'; // Solo fértil cultivado
+        } else {
+          // Areia do planalto persa alternada
+          ctx.fillStyle = (gx + gy) % 2 === 0 ? '#bfa378' : '#b2966b';
+        }
+        ctx.fill();
+
+        // Linhas de grade sutis
+        ctx.strokeStyle = 'rgba(0, 0, 0, 0.15)';
+        ctx.lineWidth = 1;
+        ctx.stroke();
+
+        // Relevo de rocha
+        if (cell.type === 'ROCK') {
+          ctx.fillStyle = '#334155';
+          ctx.beginPath();
+          ctx.arc(pos.x, pos.y + halfH - 6 * z, 8 * z, 0, Math.PI * 2);
+          ctx.fill();
+        }
+      }
+    }
+
+    // 2. Cursor Diamante Hover na Célula
+    const hPos = gridToScreen(state.hoveredGrid.x, state.hoveredGrid.y);
+    if (state.hoveredGrid.x >= 0 && state.hoveredGrid.x < GRID_SIZE && state.hoveredGrid.y >= 0 && state.hoveredGrid.y < GRID_SIZE) {
+      ctx.beginPath();
+      ctx.moveTo(hPos.x, hPos.y);
+      ctx.lineTo(hPos.x + halfW, hPos.y + halfH);
+      ctx.lineTo(hPos.x, hPos.y + halfH * 2);
+      ctx.lineTo(hPos.x - halfW, hPos.y + halfH);
+      ctx.closePath();
+      ctx.strokeStyle = 'rgba(212, 175, 55, 0.9)';
+      ctx.lineWidth = 2;
+      ctx.stroke();
+    }
+
+    // 3. Pré-visualização de Posicionamento de Edifício
+    if (state.placementPreview) {
+      const p = state.placementPreview;
+      const gx = state.hoveredGrid.x;
+      const gy = state.hoveredGrid.y;
+      const isValid = canPlaceBuildingAt(gx, gy, p.w, p.h);
+
+      for (let x = 0; x < p.w; x++) {
+        for (let y = 0; y < p.h; y++) {
+          const tilePos = gridToScreen(gx + x, gy + y);
+          ctx.beginPath();
+          ctx.moveTo(tilePos.x, tilePos.y);
+          ctx.lineTo(tilePos.x + halfW, tilePos.y + halfH);
+          ctx.lineTo(tilePos.x, tilePos.y + halfH * 2);
+          ctx.lineTo(tilePos.x - halfW, tilePos.y + halfH);
+          ctx.closePath();
+          ctx.fillStyle = isValid ? 'rgba(34, 197, 94, 0.5)' : 'rgba(239, 68, 68, 0.5)';
+          ctx.fill();
+          ctx.strokeStyle = isValid ? '#22c55e' : '#ef4444';
+          ctx.lineWidth = 2;
+          ctx.stroke();
+        }
+      }
+    }
+
+    // 4. Edifícios Ordenados por Profundidade
+    const sortedBuildings = [...state.buildings].sort((a, b) => (a.gridX + a.gridY) - (b.gridX + b.gridY));
+    for (const bld of sortedBuildings) {
+      renderBuilding(bld);
+    }
+
+    // 5. Unidades Patrulhando pela Estrada Real
+    for (const unit of state.patrollingUnits) {
+      unit.x += (unit.targetX - unit.x) * unit.speed;
+      if (Math.abs(unit.targetX - unit.x) < 0.2) {
+        unit.targetX = unit.targetX === 32 ? 8 : 32;
+      }
+
+      const pos = gridToScreen(unit.x, unit.y);
+      ctx.fillStyle = '#f3e5ab';
+      ctx.font = `bold ${Math.max(10, Math.floor(13 * z))}px sans-serif`;
+      ctx.textAlign = 'center';
+      ctx.fillText(unit.label, pos.x, pos.y - 8 * z);
+    }
+
+    requestAnimationFrame(render);
+  }
+
+  function renderBuilding(bld) {
+    const pos = gridToScreen(bld.gridX, bld.gridY);
+    const z = state.camera.zoom;
+
+    ctx.save();
+    ctx.translate(pos.x, pos.y);
+
+    if (bld.type === 'CENTRO_IMPERIAL') {
+      // Apadana de Dario I com colunas e cúpula áurea
+      ctx.fillStyle = '#8c7851';
+      ctx.fillRect(-50 * z, -55 * z, 100 * z, 55 * z);
+
+      // Cúpula Ouro
+      ctx.fillStyle = '#d4af37';
+      ctx.beginPath();
+      ctx.arc(0, -55 * z, 32 * z, Math.PI, 0);
+      ctx.fill();
+
+      // Colunas Aquemênidas
+      ctx.fillStyle = '#f3e5ab';
+      ctx.fillRect(-40 * z, -52 * z, 8 * z, 52 * z);
+      ctx.fillRect(-15 * z, -52 * z, 8 * z, 52 * z);
+      ctx.fillRect(10 * z, -52 * z, 8 * z, 52 * z);
+      ctx.fillRect(32 * z, -52 * z, 8 * z, 52 * z);
+
+      ctx.fillStyle = '#ffffff';
+      ctx.font = `bold ${Math.max(10, Math.floor(11 * z))}px sans-serif`;
+      ctx.textAlign = 'center';
+      ctx.fillText('🏛️ APADANA', 0, -68 * z);
+    } else if (bld.type === 'FAZENDA') {
+      ctx.fillStyle = '#2d5016';
+      ctx.fillRect(-35 * z, -30 * z, 70 * z, 35 * z);
+      ctx.fillStyle = '#a3e635';
+      ctx.font = `bold ${Math.max(9, Math.floor(10 * z))}px sans-serif`;
+      ctx.textAlign = 'center';
+      ctx.fillText('🌾 Qanat', 0, -12 * z);
+    } else if (bld.type === 'SERRARIA') {
+      ctx.fillStyle = '#451a03';
+      ctx.fillRect(-32 * z, -28 * z, 64 * z, 32 * z);
+      ctx.fillStyle = '#fb923c';
+      ctx.font = `bold ${Math.max(9, Math.floor(10 * z))}px sans-serif`;
+      ctx.textAlign = 'center';
+      ctx.fillText('🪵 Cedro', 0, -10 * z);
+    } else if (bld.type === 'QUARTEL') {
+      ctx.fillStyle = '#7f1d1d';
+      ctx.fillRect(-36 * z, -34 * z, 72 * z, 38 * z);
+      ctx.fillStyle = '#fca5a5';
+      ctx.font = `bold ${Math.max(9, Math.floor(10 * z))}px sans-serif`;
+      ctx.textAlign = 'center';
+      ctx.fillText('⚔️ Quartel', 0, -14 * z);
+    } else if (bld.type === 'TORRE_ARQUEIROS') {
+      ctx.fillStyle = '#1e3a8a';
+      ctx.fillRect(-18 * z, -50 * z, 36 * z, 50 * z);
+      ctx.fillStyle = '#93c5fd';
+      ctx.font = `bold ${Math.max(9, Math.floor(10 * z))}px sans-serif`;
+      ctx.textAlign = 'center';
+      ctx.fillText('🏹 Torre', 0, -56 * z);
+    } else {
+      ctx.fillStyle = '#374151';
+      ctx.fillRect(-30 * z, -28 * z, 60 * z, 32 * z);
+      ctx.fillStyle = '#e5e7eb';
+      ctx.font = `bold ${Math.max(9, Math.floor(10 * z))}px sans-serif`;
+      ctx.textAlign = 'center';
+      ctx.fillText(bld.name, 0, -10 * z);
+    }
+
+    ctx.restore();
+  }
+
+  // Interação de Mouse e Toque com Amortecimento Inercial
+  canvas.addEventListener('mousedown', (e) => {
+    state.camera.isDragging = true;
+    state.camera.lastX = e.clientX;
+    state.camera.lastY = e.clientY;
+  });
+
+  window.addEventListener('mousemove', (e) => {
+    const mouseGrid = screenToGrid(e.clientX, e.clientY);
+    state.hoveredGrid = mouseGrid;
+
+    // Atualiza overlay
+    const cell = (mouseGrid.x >= 0 && mouseGrid.x < GRID_SIZE && mouseGrid.y >= 0 && mouseGrid.y < GRID_SIZE)
+      ? state.terrain[mouseGrid.x][mouseGrid.y].type
+      : 'Fora da Vila';
+    document.getElementById('coord-info').textContent =
+      `Célula: (${mouseGrid.x}, ${mouseGrid.y}) | Bioma: ${cell} | Zoom: ${state.camera.zoom.toFixed(1)}x`;
+
+    if (!state.camera.isDragging) return;
+
+    const dx = e.clientX - state.camera.lastX;
+    const dy = e.clientY - state.camera.lastY;
+    state.camera.targetX += dx;
+    state.camera.targetY += dy;
+    state.camera.velX = dx * 0.3;
+    state.camera.velY = dy * 0.3;
+    state.camera.lastX = e.clientX;
+    state.camera.lastY = e.clientY;
+  });
+
+  window.addEventListener('mouseup', () => { state.camera.isDragging = false; });
+
+  // Clique no Canvas: Confirmação de Construção ou Pathfinding
+  canvas.addEventListener('click', (e) => {
+    const clickGrid = screenToGrid(e.clientX, e.clientY);
+
+    // Se estiver em modo de construção
+    if (state.placementPreview) {
+      const p = state.placementPreview;
+      if (canPlaceBuildingAt(clickGrid.x, clickGrid.y, p.w, p.h)) {
+        if (state.wood < p.woodCost || state.stone < p.stoneCost) {
+          showToast('⚠️ Recursos insuficientes!');
+          return;
+        }
+
+        state.wood -= p.woodCost;
+        state.stone -= p.stoneCost;
+
+        state.buildings.push({
+          id: `bld_${Date.now()}`,
+          type: p.type,
+          name: p.type,
+          gridX: clickGrid.x,
+          gridY: clickGrid.y,
+          w: p.w,
+          h: p.h
+        });
+
+        playAudioBeep(440, 0.25);
+        showToast(`🏛️ ${p.type} erguido com sucesso em (${clickGrid.x}, ${clickGrid.y})!`);
+        cancelBuildingPlacement();
+        updateHud();
+      } else {
+        showToast('❌ Local inválido! Há colisão com rio, rocha ou outro edifício.');
+      }
+    }
+  });
+
+  canvas.addEventListener('wheel', (e) => {
+    e.preventDefault();
+    const factor = e.deltaY < 0 ? 1.15 : 0.85;
+    adjustZoom(factor);
+  }, { passive: false });
+
+  // Touch Mobile Pan & Pinch Zoom
+  let touchDist = 0;
+  canvas.addEventListener('touchstart', (e) => {
+    if (e.touches.length === 1) {
+      state.camera.isDragging = true;
+      state.camera.lastX = e.touches[0].clientX;
+      state.camera.lastY = e.touches[0].clientY;
+    } else if (e.touches.length === 2) {
+      touchDist = Math.hypot(
+        e.touches[0].clientX - e.touches[1].clientX,
+        e.touches[0].clientY - e.touches[1].clientY
+      );
+    }
+  });
+
+  canvas.addEventListener('touchmove', (e) => {
+    if (e.touches.length === 1 && state.camera.isDragging) {
+      const dx = e.touches[0].clientX - state.camera.lastX;
+      const dy = e.touches[0].clientY - state.camera.lastY;
+      state.camera.targetX += dx;
+      state.camera.targetY += dy;
+      state.camera.lastX = e.touches[0].clientX;
+      state.camera.lastY = e.touches[0].clientY;
+    } else if (e.touches.length === 2) {
+      const dist = Math.hypot(
+        e.touches[0].clientX - e.touches[1].clientX,
+        e.touches[0].clientY - e.touches[1].clientY
+      );
+      const factor = dist / touchDist;
+      adjustZoom(factor);
+      touchDist = dist;
+    }
+  });
+
+  canvas.addEventListener('touchend', () => { state.camera.isDragging = false; });
+
+  // Modos de Construção
+  function startBuildingPlacement(type, w, h, woodCost, stoneCost) {
+    state.placementPreview = { type, w, h, woodCost, stoneCost };
+    closeModal('modal-build');
+    document.getElementById('btn-build').innerHTML = '<span>❌</span> Cancelar';
+    document.getElementById('btn-build').classList.add('cancel-build');
+    document.getElementById('btn-build').onclick = cancelBuildingPlacement;
+    showToast('Toque ou clique na grade para confirmar o local de construção.');
+  }
+
+  function cancelBuildingPlacement() {
+    state.placementPreview = null;
+    const btn = document.getElementById('btn-build');
+    btn.innerHTML = '<span>🔨</span> Construir';
+    btn.classList.remove('cancel-build');
+    btn.onclick = openBuildModal;
+  }
+
+  // Modais & HUD
+  function openBuildModal() { document.getElementById('modal-build').style.display = 'flex'; }
+  function openArmyModal() { document.getElementById('modal-army').style.display = 'flex'; }
+  function openBattleModal() { document.getElementById('modal-battle').style.display = 'flex'; }
+  function closeModal(id) { document.getElementById(id).style.display = 'none'; }
+
+  function showToast(msg) {
+    const toast = document.getElementById('toast');
+    toast.textContent = msg;
+    toast.style.display = 'block';
+    setTimeout(() => { toast.style.display = 'none'; }, 3500);
+  }
+
+  function updateHud() {
+    document.getElementById('val-food').textContent = Math.floor(state.food).toLocaleString();
+    document.getElementById('val-wood').textContent = Math.floor(state.wood).toLocaleString();
+    document.getElementById('val-stone').textContent = Math.floor(state.stone).toLocaleString();
+    document.getElementById('val-iron').textContent = Math.floor(state.iron).toLocaleString();
+    document.getElementById('val-gold').textContent = Math.floor(state.gold).toLocaleString();
+    document.getElementById('val-gems').textContent = Math.floor(state.gems).toLocaleString();
+    document.getElementById('army-count').textContent = state.immortals;
+  }
+
+  // Economia Tick Contínuo
+  setInterval(() => {
+    state.food += 3;
+    state.wood += 2;
+    state.stone += 1;
+    state.gold += 2;
+    updateHud();
+  }, 1000);
+
+  function trainUnits(type, count) {
+    const costFood = 120 * count;
+    const costGold = 40 * count;
+
+    if (state.food < costFood || state.gold < costGold) {
+      showToast('⚠️ Ouro ou Alimento insuficientes!');
+      return;
+    }
+
+    state.food -= costFood;
+    state.gold -= costGold;
+    state.immortals += count;
+
+    closeModal('modal-army');
+    updateHud();
+    playAudioBeep(520, 0.3);
+    showToast(`⚔️ +${count} Imortais incorporados à Guarda Real!`);
+  }
+
+  function executePvPAttack() {
+    const log = document.getElementById('battle-log');
+    log.style.display = 'block';
+    log.innerHTML = '⚡ [INÍCIO DO COMBATE DETERMINÍSTICO ASSÍNCRONO]<br>';
+
+    setTimeout(() => {
+      log.innerHTML += '🏹 [T+5s] Imortais avançam pela Estrada Real sob estandartes dourados...<br>';
+    }, 500);
+
+    setTimeout(() => {
+      log.innerHTML += '🔥 [T+14s] Baterias defensivas engajadas. Baixas persas: -2 Imortais.<br>';
+    }, 1200);
+
+    setTimeout(() => {
+      log.innerHTML += '💥 [T+28s] Centro Imperial babilônico destruído!<br>';
+      log.innerHTML += '<b style="color: #f9d71c;">⭐ ⭐ ⭐ 3 ESTRELAS (100% Destruição)</b><br>';
+      log.innerHTML += '<span style="color: #a3e635;">💰 Saque: +1.200 Ouro, +1.800 Alimento</span>';
+
+      state.immortals = Math.max(0, state.immortals - 2);
+      state.gold += 1200;
+      state.food += 1800;
+      updateHud();
+      playAudioFanfare();
+      showToast('🏆 Vitória Esmagadora de Persépolis! 3 Estrelas!');
+    }, 2000);
+  }
+
+  // Áudio Sintetizado WebAudio API
+  let audioCtx = null;
+  function getAudioCtx() {
+    if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    return audioCtx;
+  }
+
+  function playAudioBeep(freq, duration) {
+    try {
+      const ac = getAudioCtx();
+      const osc = ac.createOscillator();
+      const gain = ac.createGain();
+      osc.type = 'triangle';
+      osc.frequency.setValueAtTime(freq, ac.currentTime);
+      gain.gain.setValueAtTime(0.15, ac.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.001, ac.currentTime + duration);
+      osc.connect(gain);
+      gain.connect(ac.destination);
+      osc.start();
+      osc.stop(ac.currentTime + duration);
+    } catch (_) {}
+  }
+
+  function playAudioFanfare() {
+    playAudioBeep(440, 0.2);
+    setTimeout(() => playAudioBeep(554, 0.2), 150);
+    setTimeout(() => playAudioBeep(659, 0.4), 300);
+  }
+
+  // Modais Adicionais (Fases 7, 10, 11)
+  function openPveModal() { document.getElementById('modal-pve').style.display = 'flex'; }
+  function openAllianceModal() { document.getElementById('modal-alliance').style.display = 'flex'; }
+  function openStoreModal() { document.getElementById('modal-store').style.display = 'flex'; }
+
+  function startPveBattle(missionName, rewardFood, rewardGold, rewardGems) {
+    closeModal('modal-pve');
+    state.food += rewardFood;
+    state.gold += rewardGold;
+    state.gems += rewardGems;
+    updateHud();
+    playAudioFanfare();
+    showToast(`⚔️ Vitória na missão PvE "${missionName}"! Recompensa creditada!`);
+  }
+
+  function donateTroopsAlliance() {
+    if (state.immortals < 5) {
+      showToast('⚠️ Imortais insuficientes para doação!');
+      return;
+    }
+    state.immortals -= 5;
+    updateHud();
+    playAudioBeep(480, 0.2);
+    showToast('🛡️ 5 Imortais doados à Guarda de Persépolis! +50 Pontos de Aliança!');
+  }
+
+  function buyStoreProduct(name, gemsBonus, shieldHours) {
+    closeModal('modal-store');
+    state.gems += gemsBonus;
+    updateHud();
+    playAudioFanfare();
+    showToast(`💎 Compra autorizada! ${name} entregue com sucesso!`);
+  }
+
+  updateHud();
+  render();
+</script>
+</body>
+</html>

@@ -1,6 +1,6 @@
 /**
  * IMPÉRIOS — Ascensão das Civilizações
- * Fastify Server Application & RESTful API Endpoints
+ * Fastify Server Application & RESTful API Endpoints (Fases 1 a 14)
  */
 
 import Fastify, { FastifyInstance, FastifyRequest, FastifyReply } from 'fastify';
@@ -21,6 +21,14 @@ import { AuthService, inMemoryDb } from './modules/auth/authService.js';
 import { EconomyService } from './modules/economy/economyService.js';
 import { VillageService } from './modules/village/villageService.js';
 import { CombatService } from './modules/combat/combatService.js';
+import { ConstructionManager } from './modules/village/constructionManager.js';
+import { EraProgressionManager } from './modules/economy/eraProgressionManager.js';
+import { PVE_CAMPAIGN_MISSIONS } from './modules/combat/pveCampaignManager.js';
+import { ALL_CIVILIZATIONS_CATALOG } from './modules/civilization/civilizationsCatalog.js';
+import { STORE_CATALOG, ShieldAndStoreManager } from './modules/shield/shieldAndStoreManager.js';
+import { AllianceManager } from './modules/alliance/allianceManager.js';
+import { AdminService } from './modules/admin/adminService.js';
+import { SecurityService } from './modules/security/securityService.js';
 
 export function buildApp(): FastifyInstance {
   const app = Fastify({
@@ -50,22 +58,26 @@ export function buildApp(): FastifyInstance {
     }
   };
 
-  // 1. Health check
-  app.get('/api/health', async () => {
+  // 1. Health check & Status
+  app.get('/api/health', async (req: FastifyRequest) => {
+    const clientId = req.ip || 'unknown';
+    const rateCheck = SecurityService.checkRateLimit(clientId);
+
     return {
       success: true,
       data: {
         status: 'UP',
         game: 'IMPÉRIOS — Ascensão das Civilizações',
-        version: '0.1.0-vertical-slice',
+        version: '1.0.0-full-pipeline',
         uptimeSeconds: Math.floor(process.uptime()),
+        rateLimitRemaining: rateCheck.remaining,
         timestamp: Date.now()
       },
       serverTimestamp: Date.now()
     };
   });
 
-  // 2. Civilizações e eras
+  // 2. Civilizações (Persa ativa & Catálogo completo das 12 Civilizações)
   app.get('/api/civilizations', async () => {
     return {
       success: true,
@@ -74,6 +86,17 @@ export function buildApp(): FastifyInstance {
         eras: ERAS_CATALOG,
         buildingsCatalog: BUILDINGS_CATALOG,
         unitsCatalog: UNITS_CATALOG
+      },
+      serverTimestamp: Date.now()
+    };
+  });
+
+  app.get('/api/civilizations/all', async () => {
+    return {
+      success: true,
+      data: {
+        totalCivilizations: Object.keys(ALL_CIVILIZATIONS_CATALOG).length,
+        civilizations: ALL_CIVILIZATIONS_CATALOG
       },
       serverTimestamp: Date.now()
     };
@@ -99,7 +122,7 @@ export function buildApp(): FastifyInstance {
     };
   });
 
-  // 4. Estado da Vila com cálculo offline em tempo real
+  // 4. Estado da Vila com cálculo offline em tempo real e progressão de eras
   app.get('/api/village/state', { preHandler: [authenticate] }, async (req: FastifyRequest) => {
     const userPayload = req.user as { userId: string; villageId: string };
     const village = inMemoryDb.villages.get(userPayload.villageId);
@@ -108,8 +131,11 @@ export function buildApp(): FastifyInstance {
       return { success: false, error: { code: 'NOT_FOUND', message: 'Vila não encontrada.' }, serverTimestamp: Date.now() };
     }
 
-    // Calcula produção offline acumulada até o milissegundo atual
     EconomyService.tickVillageResources(village, Date.now());
+
+    // Avalia Era com base no Centro Imperial
+    const imperialCenter = village.buildings.find(b => b.type === BuildingType.CENTRO_IMPERIAL);
+    const eraStatus = EraProgressionManager.evaluateVillageEra(imperialCenter?.level || 1, village.era as any);
 
     return {
       success: true,
@@ -117,7 +143,8 @@ export function buildApp(): FastifyInstance {
         villageId: village.villageId,
         name: village.name,
         civilization: village.civ,
-        era: village.era,
+        era: eraStatus.currentEra,
+        eraStatus,
         economy: {
           villageId: village.villageId,
           balances: village.balances,
@@ -149,14 +176,12 @@ export function buildApp(): FastifyInstance {
     }
 
     const cost = def.costsByLevel[1]?.resources || {};
-
-    // Atualiza economia offline antes de deduzir custos
     EconomyService.tickVillageResources(village, Date.now());
 
     if (!EconomyService.canAfford(village.balances, cost)) {
       return reply.status(400).send({
         success: false,
-        error: { code: 'INSUFFICIENT_RESOURCES', message: 'Recursos insuficientes para construir este edifício.' },
+        error: { code: 'INSUFFICIENT_RESOURCES', message: 'Recursos insuficientes.' },
         serverTimestamp: Date.now()
       });
     }
@@ -178,12 +203,10 @@ export function buildApp(): FastifyInstance {
       });
     }
 
-    // Deduz recursos e adiciona edifício
     const deduct = EconomyService.deductResources(village.balances, cost);
     village.balances = deduct.newBalances;
     village.buildings.push(placeResult.newBuilding);
 
-    // Recalcula taxas de produção e armazenamento
     const rates = VillageService.calculateVillageRates(village.buildings);
     village.productionPerHour = rates.productionPerHour;
     village.capacities = rates.capacities;
@@ -211,7 +234,7 @@ export function buildApp(): FastifyInstance {
 
     const def = UNITS_CATALOG[unitType];
     if (!def || !count || count <= 0) {
-      return reply.status(400).send({ success: false, error: { code: 'INVALID_REQUEST', message: 'Parâmetros de tropa inválidos.' } });
+      return reply.status(400).send({ success: false, error: { code: 'INVALID_REQUEST', message: 'Parâmetros inválidos.' } });
     }
 
     const totalCost = {
@@ -227,7 +250,7 @@ export function buildApp(): FastifyInstance {
     if (!EconomyService.canAfford(village.balances, totalCost)) {
       return reply.status(400).send({
         success: false,
-        error: { code: 'INSUFFICIENT_RESOURCES', message: 'Recursos insuficientes para treinar esta quantidade de tropas.' },
+        error: { code: 'INSUFFICIENT_RESOURCES', message: 'Recursos insuficientes.' },
         serverTimestamp: Date.now()
       });
     }
@@ -248,11 +271,19 @@ export function buildApp(): FastifyInstance {
     };
   });
 
-  // 7. Matchmaking PvP: Retorna alvos elegíveis com snapshots autoritativos
-  app.get('/api/combat/matchmaking', { preHandler: [authenticate] }, async (req: FastifyRequest) => {
-    const userPayload = req.user as { userId: string; villageId: string };
+  // 7. Campanha Histórica PvE
+  app.get('/api/combat/pve', { preHandler: [authenticate] }, async () => {
+    return {
+      success: true,
+      data: {
+        missions: PVE_CAMPAIGN_MISSIONS
+      },
+      serverTimestamp: Date.now()
+    };
+  });
 
-    // Gera um snapshot defensivo de vila rival para simulação de batalha
+  // 8. Matchmaking PvP
+  app.get('/api/combat/matchmaking', { preHandler: [authenticate] }, async (req: FastifyRequest) => {
     const targetSnapshot: DefensiveSnapshot = {
       villageId: 'vlg_rival_babilionia_01',
       defenderUserId: 'usr_rival_01',
@@ -260,57 +291,12 @@ export function buildApp(): FastifyInstance {
       civilization: 'babiloneo',
       era: 1,
       shieldActiveUntil: 0,
-      availableLoot: {
-        alimento: 2400,
-        madeira: 1800,
-        pedra: 1200,
-        ferro: 600,
-        ouro: 1500,
-        gemas: 0
-      },
+      availableLoot: { alimento: 2400, madeira: 1800, pedra: 1200, ferro: 600, ouro: 1500, gemas: 0 },
       buildings: [
-        {
-          id: 'def_bld_center',
-          type: 'CENTRO_IMPERIAL',
-          level: 1,
-          gridX: 20,
-          gridY: 20,
-          maxHealth: 2000,
-          currentHealth: 2000,
-          isDefense: false
-        },
-        {
-          id: 'def_bld_tower1',
-          type: 'TORRE_ARQUEIROS',
-          level: 1,
-          gridX: 18,
-          gridY: 18,
-          maxHealth: 600,
-          currentHealth: 600,
-          isDefense: true,
-          damagePerSecond: 35,
-          range: 5
-        },
-        {
-          id: 'def_bld_granary',
-          type: 'CELEIRO',
-          level: 1,
-          gridX: 23,
-          gridY: 20,
-          maxHealth: 700,
-          currentHealth: 700,
-          isDefense: false
-        },
-        {
-          id: 'def_bld_warehouse',
-          type: 'ARMAZEM',
-          level: 1,
-          gridX: 20,
-          gridY: 24,
-          maxHealth: 800,
-          currentHealth: 800,
-          isDefense: false
-        }
+        { id: 'def_bld_center', type: 'CENTRO_IMPERIAL', level: 1, gridX: 20, gridY: 20, maxHealth: 2000, currentHealth: 2000, isDefense: false },
+        { id: 'def_bld_tower1', type: 'TORRE_ARQUEIROS', level: 1, gridX: 18, gridY: 18, maxHealth: 600, currentHealth: 600, isDefense: true, damagePerSecond: 35, range: 5 },
+        { id: 'def_bld_granary', type: 'CELEIRO', level: 1, gridX: 23, gridY: 20, maxHealth: 700, currentHealth: 700, isDefense: false },
+        { id: 'def_bld_warehouse', type: 'ARMAZEM', level: 1, gridX: 20, gridY: 24, maxHealth: 800, currentHealth: 800, isDefense: false }
       ]
     };
 
@@ -323,7 +309,7 @@ export function buildApp(): FastifyInstance {
     };
   });
 
-  // 8. Simulação Autoritativa de Combate
+  // 9. Simulação Autoritativa de Combate
   app.post('/api/combat/simulate', { preHandler: [authenticate] }, async (req: FastifyRequest<{ Body: { defenderVillageId: string; deployedArmy: { unitType: UnitType; count: number }[] } }>, reply) => {
     const userPayload = req.user as { userId: string; villageId: string };
     const { deployedArmy } = req.body || {};
@@ -333,7 +319,6 @@ export function buildApp(): FastifyInstance {
       return reply.status(404).send({ success: false, error: { code: 'NOT_FOUND', message: 'Vila atacante não encontrada.' } });
     }
 
-    // Snapshot defensor sintético para simulação
     const defenderSnapshot: DefensiveSnapshot = {
       villageId: 'vlg_rival_babilionia_01',
       defenderUserId: 'usr_rival_01',
@@ -357,7 +342,6 @@ export function buildApp(): FastifyInstance {
       deployedArmy || [{ unitType: UnitType.IMORTAL_PERSA, count: 10 }]
     );
 
-    // Se houve vitória e saque, credita na vila do atacante
     if (simResult.isVictory && simResult.lootPlundered) {
       village.balances = EconomyService.creditResources(village.balances, village.capacities, simResult.lootPlundered);
     }
@@ -367,6 +351,83 @@ export function buildApp(): FastifyInstance {
       data: {
         battleResult: simResult,
         updatedBalances: village.balances
+      },
+      serverTimestamp: Date.now()
+    };
+  });
+
+  // 10. Loja e Compras
+  app.get('/api/store/products', async () => {
+    return {
+      success: true,
+      data: {
+        catalog: STORE_CATALOG
+      },
+      serverTimestamp: Date.now()
+    };
+  });
+
+  app.post('/api/store/purchase', { preHandler: [authenticate] }, async (req: FastifyRequest<{ Body: { receiptToken: string; sku: string } }>, reply) => {
+    const userPayload = req.user as { userId: string; villageId: string };
+    const { receiptToken, sku } = req.body || {};
+
+    const village = inMemoryDb.villages.get(userPayload.villageId);
+    if (!village) {
+      return reply.status(404).send({ success: false, error: { code: 'NOT_FOUND', message: 'Vila não encontrada.' } });
+    }
+
+    const purchase = ShieldAndStoreManager.processPurchase(
+      receiptToken || `token_${Date.now()}`,
+      sku,
+      village.balances.gemas,
+      village.shieldActiveUntil
+    );
+
+    if (!purchase.success) {
+      return reply.status(400).send({ success: false, error: { code: 'PURCHASE_FAILED', message: purchase.error } });
+    }
+
+    village.balances.gemas = purchase.newGems;
+    village.shieldActiveUntil = purchase.newShieldExpiresAt;
+
+    return {
+      success: true,
+      data: {
+        newGems: purchase.newGems,
+        newShieldExpiresAt: purchase.newShieldExpiresAt,
+        entitlement: purchase.entitlementGranted
+      },
+      serverTimestamp: Date.now()
+    };
+  });
+
+  // 11. Alianças
+  app.post('/api/alliance/create', { preHandler: [authenticate] }, async (req: FastifyRequest<{ Body: { name: string; tag: string; description: string } }>, reply) => {
+    const userPayload = req.user as { userId: string };
+    const { name, tag, description } = req.body || {};
+
+    const result = AllianceManager.createAlliance(userPayload.userId, 'Sátrapa Imperial', name, tag, description);
+    if (!result.success) {
+      return reply.status(400).send({ success: false, error: { code: 'ALLIANCE_ERROR', message: result.error } });
+    }
+
+    return {
+      success: true,
+      data: {
+        alliance: result.alliance
+      },
+      serverTimestamp: Date.now()
+    };
+  });
+
+  // 12. Painel Administrativo
+  app.get('/api/admin/metrics', async () => {
+    const stats = AdminService.computeGlobalEconomyStats(1500000, 3200000, 85000, 420);
+    return {
+      success: true,
+      data: {
+        globalStats: stats,
+        auditLogs: AdminService.getAuditLogs()
       },
       serverTimestamp: Date.now()
     };

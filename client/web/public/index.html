@@ -389,10 +389,19 @@
       <span>🔨</span> Construir
     </button>
     <button class="btn-action" onclick="openArmyModal()">
-      <span>⚔️</span> Quartel (<span id="army-count">15</span> Imortais)
+      <span>⚔️</span> Quartel (<span id="army-count">15</span>)
+    </button>
+    <button class="btn-action" onclick="openPveModal()">
+      <span>🗺️</span> Campanha
+    </button>
+    <button class="btn-action" onclick="openAllianceModal()">
+      <span>🛡️</span> Aliança
+    </button>
+    <button class="btn-action" onclick="openStoreModal()">
+      <span>💎</span> Loja
     </button>
     <button class="btn-action battle" onclick="openBattleModal()">
-      <span>🔥</span> PvP Batalha
+      <span>🔥</span> PvP
     </button>
   </div>
 
@@ -495,6 +504,102 @@
           </button>
         </div>
         <div id="battle-log" style="display: none; background: #000; padding: 10px; border-radius: 6px; font-family: monospace; font-size: 11px; max-height: 180px; overflow-y: auto;">
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal Campanha PvE -->
+  <div id="modal-pve" class="modal-overlay">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h2>🗺️ Campanha de Conquistas Históricas</h2>
+        <button class="modal-close" onclick="closeModal('modal-pve')">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div class="building-item">
+          <div>
+            <div class="item-title">1. Incursão das Tribos da Estepe</div>
+            <div class="item-desc">Bandos nômades ameaçam as caravanas aquemênidas.</div>
+            <div class="item-cost">Recompensa: 🌾 500, 🪵 500, 💎 25 Gemas</div>
+          </div>
+          <button class="btn-action battle" onclick="startPveBattle('Tribos da Estepe', 500, 500, 25)">Atacar</button>
+        </div>
+
+        <div class="building-item">
+          <div>
+            <div class="item-title">2. Posto Avançado de Susa</div>
+            <div class="item-desc">Rebelião militar nas margens da Estrada Real.</div>
+            <div class="item-cost">Recompensa: 🪙 600, 🌾 1.000, 💎 50 Gemas</div>
+          </div>
+          <button class="btn-action battle" onclick="startPveBattle('Posto de Susa', 1000, 600, 50)">Atacar</button>
+        </div>
+
+        <div class="building-item">
+          <div>
+            <div class="item-title">3. Os Portões de Ishtar (Babilônia)</div>
+            <div class="item-desc">A lendária conquista de Ciro, o Grande na Mesopotâmia.</div>
+            <div class="item-cost">Recompensa: 🪙 2.500, 🪨 2.000, 💎 100 Gemas</div>
+          </div>
+          <button class="btn-action battle" onclick="startPveBattle('Babilônia Imperial', 2000, 2500, 100)">Atacar</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal Aliança -->
+  <div id="modal-alliance" class="modal-overlay">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h2>🛡️ Alianças & Legiões</h2>
+        <button class="modal-close" onclick="closeModal('modal-alliance')">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div id="alliance-info" style="background: rgba(255,255,255,0.05); padding: 14px; border-radius: 8px; border: 1px solid var(--border-gold);">
+          <h3 style="color: var(--persian-gold); font-size: 15px; margin-bottom: 4px;">Guarda de Persépolis [PERS]</h3>
+          <p style="font-size: 12px; color: var(--text-muted); margin-bottom: 10px;">Líder: Grande Sátrapa • 34 Membros • Ranking #12 Global</p>
+          <div style="display: flex; gap: 8px;">
+            <button class="btn-action" style="flex: 1;" onclick="donateTroopsAlliance()">Doar 5 Imortais (+50 XP)</button>
+            <button class="btn-action" style="flex: 1;" onclick="showToast('💬 Chat da Aliança: Grande Sátrapa convocou todos para a guerra!')">Ver Chat</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal Loja -->
+  <div id="modal-store" class="modal-overlay">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h2>💎 Tesouro Imperial & Loja</h2>
+        <button class="modal-close" onclick="closeModal('modal-store')">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div class="unit-item">
+          <div>
+            <div class="item-title">Bolsa de 500 Gemas</div>
+            <div class="item-desc">Moeda de troca imperial com mercadores estrangeiros.</div>
+            <div class="item-cost">R$ 14,90 (Receba 500 Dáricos de Gemas)</div>
+          </div>
+          <button class="btn-action" onclick="buyStoreProduct('Gemas 500', 500, 0)">Comprar</button>
+        </div>
+
+        <div class="unit-item">
+          <div>
+            <div class="item-title">Cabana do 3º Construtor Imperial</div>
+            <div class="item-desc">Permite erguer mais uma obra simultaneamente.</div>
+            <div class="item-cost">R$ 29,90 (+250 Gemas de Bônus)</div>
+          </div>
+          <button class="btn-action" onclick="buyStoreProduct('3º Construtor', 250, 0)">Comprar</button>
+        </div>
+
+        <div class="unit-item">
+          <div>
+            <div class="item-title">Escudo Sagrado de Ahura Mazda (48h)</div>
+            <div class="item-desc">Proteção absoluta contra todos os ataques rivais.</div>
+            <div class="item-cost">R$ 19,90 (+48h de Escudo)</div>
+          </div>
+          <button class="btn-action" onclick="buyStoreProduct('Escudo 48h', 100, 48)">Comprar</button>
         </div>
       </div>
     </div>
@@ -1084,6 +1189,40 @@
     playAudioBeep(440, 0.2);
     setTimeout(() => playAudioBeep(554, 0.2), 150);
     setTimeout(() => playAudioBeep(659, 0.4), 300);
+  }
+
+  // Modais Adicionais (Fases 7, 10, 11)
+  function openPveModal() { document.getElementById('modal-pve').style.display = 'flex'; }
+  function openAllianceModal() { document.getElementById('modal-alliance').style.display = 'flex'; }
+  function openStoreModal() { document.getElementById('modal-store').style.display = 'flex'; }
+
+  function startPveBattle(missionName, rewardFood, rewardGold, rewardGems) {
+    closeModal('modal-pve');
+    state.food += rewardFood;
+    state.gold += rewardGold;
+    state.gems += rewardGems;
+    updateHud();
+    playAudioFanfare();
+    showToast(`⚔️ Vitória na missão PvE "${missionName}"! Recompensa creditada!`);
+  }
+
+  function donateTroopsAlliance() {
+    if (state.immortals < 5) {
+      showToast('⚠️ Imortais insuficientes para doação!');
+      return;
+    }
+    state.immortals -= 5;
+    updateHud();
+    playAudioBeep(480, 0.2);
+    showToast('🛡️ 5 Imortais doados à Guarda de Persépolis! +50 Pontos de Aliança!');
+  }
+
+  function buyStoreProduct(name, gemsBonus, shieldHours) {
+    closeModal('modal-store');
+    state.gems += gemsBonus;
+    updateHud();
+    playAudioFanfare();
+    showToast(`💎 Compra autorizada! ${name} entregue com sucesso!`);
   }
 
   updateHud();

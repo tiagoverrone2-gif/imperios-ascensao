@@ -3,19 +3,17 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>IMPÉRIOS — Ascensão das Civilizações (RTS Clássico Estilo Genie Engine)</title>
+  <title>IMPÉRIOS — Ascensão das Civilizações (RTS Clássico Genie Engine HD)</title>
   <style>
     :root {
-      --bg-dark: #080b0f;
+      --bg-dark: #070a0e;
       --rts-panel-bg: #14181f;
       --rts-panel-border: #4a3e26;
       --rts-gold: #e5b338;
       --rts-gold-bright: #ffe277;
       --rts-gold-dark: #8c6a1e;
       --rts-crimson: #8b1c1c;
-      --rts-blue: #1e3a5f;
-      --rts-green: #22c55e;
-      --rts-card-bg: #1c222d;
+      --rts-card-bg: #181f2a;
       --text-main: #f0f3f6;
       --text-muted: #9ba8b8;
     }
@@ -54,48 +52,49 @@
       cursor: crosshair;
     }
 
-    /* ============================================================
-       TOP RTS RESOURCE BAR (Estilo Age of Empires / SWGB)
-       ============================================================ */
+    /* BARRA SUPERIOR DE RECURSOS RTS */
     .top-rts-bar {
       position: absolute;
       top: 0;
       left: 0;
       width: 100%;
-      height: 48px;
-      background: linear-gradient(180deg, #1b2029 0%, #10141a 100%);
+      height: 50px;
+      background: linear-gradient(180deg, #1d222b 0%, #10141a 100%);
       border-bottom: 2px solid var(--rts-panel-border);
       display: flex;
       align-items: center;
       justify-content: space-between;
-      padding: 0 14px;
+      padding: 0 16px;
       z-index: 100;
-      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.7);
+      box-shadow: 0 4px 18px rgba(0, 0, 0, 0.8);
     }
 
     .civ-header-badge {
       display: flex;
       align-items: center;
-      gap: 10px;
+      gap: 12px;
     }
 
     .civ-flag-icon {
-      width: 32px;
-      height: 32px;
+      width: 36px;
+      height: 36px;
       border-radius: 4px;
-      background: linear-gradient(135deg, var(--rts-crimson), var(--rts-gold));
       border: 1px solid var(--rts-gold);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 16px;
-      box-shadow: 0 0 8px rgba(229, 179, 56, 0.5);
+      overflow: hidden;
+      background: #000;
+      box-shadow: 0 0 10px rgba(229, 179, 56, 0.5);
+    }
+
+    .civ-flag-icon img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
     }
 
     .civ-title-box h1 {
       font-size: 14px;
       color: var(--rts-gold-bright);
-      letter-spacing: 0.5px;
+      letter-spacing: 0.6px;
       line-height: 1.1;
     }
 
@@ -107,15 +106,15 @@
     .rts-resources-strip {
       display: flex;
       align-items: center;
-      gap: 8px;
+      gap: 10px;
       overflow-x: auto;
     }
 
     .res-box {
-      background: #0b0e13;
+      background: #0a0d12;
       border: 1px solid #2e3746;
       border-radius: 4px;
-      padding: 3px 10px;
+      padding: 4px 10px;
       display: flex;
       align-items: center;
       gap: 6px;
@@ -152,41 +151,38 @@
       transform: translateY(-1px);
     }
 
-    /* ============================================================
-       BOTTOM RTS COMMAND CONSOLE (Star Wars Galactic Battlegrounds)
-       ============================================================ */
+    /* CONSOLE INFERIOR RTS (Estilo Star Wars Galactic Battlegrounds / Age of Empires) */
     .bottom-rts-console {
       position: absolute;
       bottom: 0;
       left: 0;
       width: 100%;
-      height: 150px;
-      background: linear-gradient(180deg, #181d26 0%, #0d1016 100%);
+      height: 154px;
+      background: linear-gradient(180deg, #191f2a 0%, #0c0f15 100%);
       border-top: 3px solid var(--rts-panel-border);
       display: flex;
       align-items: stretch;
       z-index: 100;
-      box-shadow: 0 -6px 20px rgba(0, 0, 0, 0.85);
+      box-shadow: 0 -6px 25px rgba(0, 0, 0, 0.9);
     }
 
-    /* 1. Radar Minimap (Esquerda) */
+    /* 1. Radar Minimap */
     .minimap-panel {
-      width: 180px;
-      height: 100%;
+      width: 185px;
       border-right: 2px solid var(--rts-panel-border);
-      background: #090c10;
-      position: relative;
+      background: #080b0f;
       display: flex;
       flex-direction: column;
       align-items: center;
       justify-content: center;
-      padding: 5px;
+      padding: 6px;
+      flex-shrink: 0;
     }
 
     canvas#minimap-canvas {
-      width: 135px;
-      height: 110px;
-      background: #121820;
+      width: 140px;
+      height: 112px;
+      background: #111720;
       border: 1px solid var(--rts-gold-dark);
       cursor: pointer;
     }
@@ -194,35 +190,34 @@
     .minimap-caption {
       font-size: 10px;
       color: var(--rts-gold);
-      margin-top: 3px;
+      margin-top: 4px;
       text-transform: uppercase;
-      letter-spacing: 0.5px;
+      letter-spacing: 0.6px;
     }
 
-    /* 2. Selection Card (Centro) */
+    /* 2. Card da Entidade Selecionada */
     .selection-panel {
       flex: 1;
       min-width: 280px;
-      padding: 10px 16px;
+      padding: 10px 18px;
       display: flex;
       align-items: center;
       gap: 16px;
       border-right: 2px solid var(--rts-panel-border);
-      background: radial-gradient(circle at left, rgba(30, 40, 55, 0.6) 0%, rgba(13, 16, 22, 0.8) 100%);
+      background: radial-gradient(circle at left, rgba(32, 44, 60, 0.6) 0%, rgba(12, 15, 21, 0.8) 100%);
     }
 
     .selection-portrait-frame {
-      width: 84px;
-      height: 84px;
-      background: #000;
+      width: 88px;
+      height: 88px;
+      background: #05070a;
       border: 2px solid var(--rts-gold);
       border-radius: 4px;
-      position: relative;
       overflow: hidden;
       display: flex;
       align-items: center;
       justify-content: center;
-      box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.8);
+      box-shadow: inset 0 0 12px rgba(0, 0, 0, 0.9);
       flex-shrink: 0;
     }
 
@@ -255,13 +250,13 @@
 
     .rts-hp-bar-wrap {
       width: 100%;
-      max-width: 240px;
-      height: 12px;
+      max-width: 250px;
+      height: 13px;
       background: #090c10;
       border: 1px solid #334155;
       border-radius: 2px;
       overflow: hidden;
-      margin-top: 2px;
+      margin-top: 3px;
       position: relative;
     }
 
@@ -301,9 +296,9 @@
       gap: 4px;
     }
 
-    /* 3. Action Grid Buttons (Direita) */
+    /* 3. Grade de Ações RTS */
     .actions-panel {
-      padding: 8px 14px;
+      padding: 10px 14px;
       display: flex;
       flex-wrap: wrap;
       align-content: center;
@@ -349,12 +344,11 @@
       color: #fca5a5;
     }
 
-    /* Quick status overlay */
     .hud-coords {
       position: absolute;
-      top: 54px;
-      left: 14px;
-      background: rgba(10, 14, 20, 0.85);
+      top: 56px;
+      left: 16px;
+      background: rgba(10, 14, 20, 0.88);
       border: 1px solid #334155;
       padding: 4px 10px;
       border-radius: 4px;
@@ -364,16 +358,15 @@
       pointer-events: none;
     }
 
-    /* Toast Notifications */
     .toast-banner {
       position: absolute;
-      top: 60px;
+      top: 64px;
       left: 50%;
       transform: translateX(-50%);
       background: rgba(18, 24, 32, 0.95);
       border: 1px solid var(--rts-gold);
       color: var(--rts-gold-bright);
-      padding: 8px 20px;
+      padding: 8px 22px;
       border-radius: 4px;
       font-size: 13px;
       font-weight: bold;
@@ -381,15 +374,9 @@
       box-shadow: 0 4px 20px rgba(0, 0, 0, 0.7);
       display: none;
       pointer-events: none;
-      animation: fadeIn 0.2s ease-out;
     }
 
-    @keyframes fadeIn {
-      from { opacity: 0; transform: translate(-50%, -10px); }
-      to { opacity: 1; transform: translate(-50%, 0); }
-    }
-
-    /* Modais */
+    /* MODAIS */
     .rts-modal-overlay {
       position: fixed;
       top: 0;
@@ -408,7 +395,7 @@
       border: 2px solid var(--rts-gold);
       border-radius: 6px;
       width: 90%;
-      max-width: 520px;
+      max-width: 540px;
       box-shadow: 0 10px 30px rgba(0, 0, 0, 0.9);
       overflow: hidden;
     }
@@ -477,11 +464,11 @@
     }
 
     @media (max-width: 768px) {
-      .bottom-rts-console { height: 130px; }
-      .minimap-panel { width: 130px; }
-      canvas#minimap-canvas { width: 110px; height: 90px; }
+      .bottom-rts-console { height: 135px; }
+      .minimap-panel { width: 135px; }
+      canvas#minimap-canvas { width: 115px; height: 92px; }
       .selection-panel { padding: 6px 10px; gap: 10px; }
-      .selection-portrait-frame { width: 64px; height: 64px; }
+      .selection-portrait-frame { width: 68px; height: 68px; }
       .selection-title { font-size: 13px; }
       .actions-panel { max-width: 240px; gap: 4px; }
       .rts-btn { padding: 6px 8px; font-size: 10px; }
@@ -491,13 +478,14 @@
 <body>
 
 <div id="game-container">
-  <!-- Canvas do Mundo RTS -->
   <canvas id="isometric-canvas"></canvas>
 
-  <!-- Barra Superior de Recursos RTS -->
+  <!-- Cabeçalho de Recursos -->
   <header class="top-rts-bar">
     <div class="civ-header-badge">
-      <div class="civ-flag-icon">🏛️</div>
+      <div class="civ-flag-icon">
+        <img src="assets/sprites/portrait_persia.png" alt="Emblema Persa">
+      </div>
       <div class="civ-title-box">
         <h1>IMPÉRIO PERSA AQUEMÊNIDA</h1>
         <span>Era do Apogeu (III) • Vila de Dario I</span>
@@ -505,11 +493,11 @@
     </div>
 
     <div class="rts-resources-strip">
-      <div class="res-box food" title="Alimento colhido dos Qanats">🌾 <span id="val-food">1.000</span></div>
-      <div class="res-box wood" title="Madeira de Cedro das Montanhas">🪵 <span id="val-wood">1.000</span></div>
-      <div class="res-box stone" title="Pedra Talhada de Persépolis">🪨 <span id="val-stone">800</span></div>
+      <div class="res-box food" title="Alimento colhido dos Qanats">🌾 <span id="val-food">1.250</span></div>
+      <div class="res-box wood" title="Madeira de Cedro das Montanhas">🪵 <span id="val-wood">1.100</span></div>
+      <div class="res-box stone" title="Pedra Talhada de Persépolis">🪨 <span id="val-stone">850</span></div>
       <div class="res-box iron" title="Ferro Forjado de Armas">⛏️ <span id="val-iron">500</span></div>
-      <div class="res-box gold" title="Dáricos de Ouro Imperial">🪙 <span id="val-gold">800</span></div>
+      <div class="res-box gold" title="Dáricos de Ouro Imperial">🪙 <span id="val-gold">920</span></div>
       <div class="res-box gems" title="Gemas do Tesouro Real">💎 <span id="val-gems">250</span></div>
       <div class="res-box pop" title="Capacidade Militar e Civil">🛡️ <span id="val-pop">35/60</span></div>
     </div>
@@ -519,30 +507,29 @@
     </a>
   </header>
 
-  <!-- Overlay de Coordenadas e Zoom -->
+  <!-- Coordenadas HUD -->
   <div class="hud-coords" id="hud-coords">
     Grade: (18, 18) | Terreno: Areia Persa | Zoom: 1.0x
   </div>
 
-  <!-- Toast Notificação -->
   <div class="toast-banner" id="toast-banner">Notificação</div>
 
-  <!-- Console Inferior RTS (Estilo Star Wars Galactic Battlegrounds / AoE) -->
+  <!-- Console Inferior RTS (Estilo Star Wars Galactic Battlegrounds) -->
   <footer class="bottom-rts-console">
     <!-- 1. Radar Minimap -->
     <div class="minimap-panel">
-      <canvas id="minimap-canvas" width="135" height="110"></canvas>
+      <canvas id="minimap-canvas" width="140" height="112"></canvas>
       <div class="minimap-caption">Radar Tático</div>
     </div>
 
     <!-- 2. Card da Entidade Selecionada -->
     <div class="selection-panel" id="selection-panel">
       <div class="selection-portrait-frame">
-        <img id="sel-portrait" src="assets/sprites/portrait_apadana.png" alt="Retrato">
+        <img id="sel-portrait" src="assets/sprites/portrait_apadana.png" alt="Retrato 0 A.D.">
       </div>
       <div class="selection-details">
-        <div class="selection-title" id="sel-title">Apadana Imperial de Susa</div>
-        <div class="selection-type" id="sel-type">Centro Imperial • Nível 3 Aquemênida</div>
+        <div class="selection-title" id="sel-title">Apadana de Dario I</div>
+        <div class="selection-type" id="sel-type">Centro Imperial • Arquitetura Aquemênida</div>
         <div class="rts-hp-bar-wrap">
           <div class="rts-hp-bar-fill" id="sel-hp-bar" style="width: 100%;"></div>
           <div class="rts-hp-bar-text" id="sel-hp-text">2.800 / 2.800 HP</div>
@@ -555,22 +542,22 @@
       </div>
     </div>
 
-    <!-- 3. Grelha de Ações RTS -->
+    <!-- 3. Grade de Ações -->
     <div class="actions-panel">
       <button class="rts-btn highlight" id="btn-build" onclick="openBuildModal()">
-        <span>🔨</span> Erguer Obras
+        <span>🔨</span> Obras
       </button>
       <button class="rts-btn" onclick="openTrainModal()">
-        <span>⚔️</span> Recrutar Tropas
+        <span>⚔️</span> Recrutar
       </button>
       <button class="rts-btn battle" onclick="openBattleModal()">
-        <span>⚡</span> Batalhas PvP/PvE
+        <span>⚡</span> Batalhas
       </button>
       <button class="rts-btn" onclick="openAllianceModal()">
         <span>🛡️</span> Aliança
       </button>
       <button class="rts-btn" onclick="openStoreModal()">
-        <span>💎</span> Tesouro Real
+        <span>💎</span> Tesouro
       </button>
       <button class="rts-btn" onclick="centerCameraOnCenter()">
         <span>🎯</span> Centralizar
@@ -578,8 +565,7 @@
     </div>
   </footer>
 
-  <!-- MODAIS DO JOGO -->
-  <!-- Modal Construção -->
+  <!-- MODAL OBRAS -->
   <div class="rts-modal-overlay" id="modal-build">
     <div class="rts-modal-box">
       <div class="rts-modal-header">
@@ -589,8 +575,8 @@
       <div class="rts-modal-body">
         <div class="catalog-item-card">
           <div>
-            <div class="item-info-title">🌾 Fazenda com Qanat Subterrâneo (3x3)</div>
-            <div class="item-info-desc">Canais ancestrais de irrigação no deserto. +120 Alimento/h.</div>
+            <div class="item-info-title">🌾 Fazenda Agrícola de Qanat (3x3)</div>
+            <div class="item-info-desc">Cultura de grãos irrigada por canais no deserto. +120 Alimento/h.</div>
             <div class="item-info-cost">Custo: 🪵 150 Madeira, 🪨 50 Pedra</div>
           </div>
           <button class="rts-btn highlight" onclick="startBuildingPlacement('FAZENDA', 3, 3, 150, 50)">Construir</button>
@@ -599,10 +585,19 @@
         <div class="catalog-item-card">
           <div>
             <div class="item-info-title">🪵 Serraria de Cedro Real (3x3)</div>
-            <div class="item-info-desc">Pátio de desbaste e corte de troncos nobres. +100 Madeira/h.</div>
+            <div class="item-info-desc">Galpão de corte e estocagem de madeira nobre. +100 Madeira/h.</div>
             <div class="item-info-cost">Custo: 🪵 120 Madeira, 🪨 80 Pedra</div>
           </div>
           <button class="rts-btn highlight" onclick="startBuildingPlacement('SERRARIA', 3, 3, 120, 80)">Construir</button>
+        </div>
+
+        <div class="catalog-item-card">
+          <div>
+            <div class="item-info-title">⛏️ Mina Imperial de Ouro & Ferro (3x3)</div>
+            <div class="item-info-desc">Extração de minério dos montes Zagros. +90 Ouro/h, +60 Ferro/h.</div>
+            <div class="item-info-cost">Custo: 🪵 200 Madeira, 🪨 150 Pedra</div>
+          </div>
+          <button class="rts-btn highlight" onclick="startBuildingPlacement('MINA', 3, 3, 200, 150)">Construir</button>
         </div>
 
         <div class="catalog-item-card">
@@ -616,8 +611,8 @@
 
         <div class="catalog-item-card">
           <div>
-            <div class="item-info-title">🏹 Torre de Arqueiros de Susa (2x2)</div>
-            <div class="item-info-desc">Bastião elevado com parapeitos para arqueiros compostos.</div>
+            <div class="item-info-title">🏹 Torre de Guarda de Susa (2x2)</div>
+            <div class="item-info-desc">Torre de tiro defensivo elevada com arqueiros sentinelas.</div>
             <div class="item-info-cost">Custo: 🪵 180 Madeira, 🪨 220 Pedra</div>
           </div>
           <button class="rts-btn highlight" onclick="startBuildingPlacement('TORRE_ARQUEIROS', 2, 2, 180, 220)">Construir</button>
@@ -626,18 +621,18 @@
     </div>
   </div>
 
-  <!-- Modal Recrutamento Militar -->
+  <!-- MODAL RECRUTAMENTO -->
   <div class="rts-modal-overlay" id="modal-train">
     <div class="rts-modal-box">
       <div class="rts-modal-header">
-        <h2>⚔️ Guarda Real & Exército de Dario</h2>
+        <h2>⚔️ Guarda Real & Exército Imperial</h2>
         <button class="rts-modal-close" onclick="closeModal('modal-train')">&times;</button>
       </div>
       <div class="rts-modal-body">
         <div class="catalog-item-card">
           <div>
             <div class="item-info-title">🛡️ Imortal Aquemênida (Infantaria Pesada)</div>
-            <div class="item-info-desc">Armadura de escamas douradas, escudo de vime (Spara) e lança.</div>
+            <div class="item-info-desc">Armadura de escamas, escudo Spara e lança longa.</div>
             <div class="item-info-cost">Custo: 🌾 120 Alimento, 🪙 40 Ouro • Dano: 28, HP: 320</div>
           </div>
           <button class="rts-btn highlight" onclick="trainUnits('IMMORTAL', 5)">Recrutar (5)</button>
@@ -655,21 +650,21 @@
     </div>
   </div>
 
-  <!-- Modal Batalha PvP / PvE -->
+  <!-- MODAL BATALHA -->
   <div class="rts-modal-overlay" id="modal-battle">
     <div class="rts-modal-box">
       <div class="rts-modal-header">
-        <h2>⚡ Teatro de Guerra & Conquistas</h2>
+        <h2>⚡ Batalhas & Conquistas</h2>
         <button class="rts-modal-close" onclick="closeModal('modal-battle')">&times;</button>
       </div>
       <div class="rts-modal-body">
         <div class="catalog-item-card">
           <div>
             <div class="item-info-title">⚔️ Campanha PvE: Portões de Ishtar (Babilônia)</div>
-            <div class="item-info-desc">Expedição histórica de Ciro, o Grande pela Mesopotâmia.</div>
+            <div class="item-info-desc">A lendária conquista de Ciro, o Grande na Mesopotâmia.</div>
             <div class="item-info-cost">Recompensa: 🪙 2.500 Ouro, 🪨 2.000 Pedra, 💎 100 Gemas</div>
           </div>
-          <button class="rts-btn battle" onclick="executePvEBattle('Portões de Ishtar', 2500, 2000, 100)">Lançar Ataque</button>
+          <button class="rts-btn battle" onclick="executePvEBattle('Portões de Ishtar', 2500, 2000, 100)">Atacar</button>
         </div>
 
         <div class="catalog-item-card">
@@ -681,13 +676,13 @@
           <button class="rts-btn battle" onclick="executePvPBattle()">Invadir Vila</button>
         </div>
 
-        <div id="battle-live-log" style="background: #090c10; padding: 10px; border-radius: 4px; font-size: 11px; font-family: monospace; display: none; border-left: 3px solid var(--rts-gold);">
+        <div id="battle-live-log" style="background: #080b0f; padding: 10px; border-radius: 4px; font-size: 11px; font-family: monospace; display: none; border-left: 3px solid var(--rts-gold);">
         </div>
       </div>
     </div>
   </div>
 
-  <!-- Modal Aliança -->
+  <!-- MODAL ALIANÇA -->
   <div class="rts-modal-overlay" id="modal-alliance">
     <div class="rts-modal-box">
       <div class="rts-modal-header">
@@ -700,14 +695,14 @@
           <p style="font-size: 11px; color: var(--text-muted); margin-bottom: 8px;">Líder: Grande Sátrapa Artaxerxes • 36 Membros • Ranking #12 Global</p>
           <div style="display: flex; gap: 8px;">
             <button class="rts-btn highlight" style="flex: 1;" onclick="donateAlliance()">Doar 5 Imortais (+50 XP)</button>
-            <button class="rts-btn" style="flex: 1;" onclick="showToast('💬 Bate-papo da Legião: Todos convocados para a Batalha de Maratona!')">Ver Chat</button>
+            <button class="rts-btn" style="flex: 1;" onclick="showToast('💬 Bate-papo da Legião: Todos convocados para a guerra!')">Ver Chat</button>
           </div>
         </div>
       </div>
     </div>
   </div>
 
-  <!-- Modal Loja -->
+  <!-- MODAL LOJA -->
   <div class="rts-modal-overlay" id="modal-store">
     <div class="rts-modal-box">
       <div class="rts-modal-header">
@@ -721,7 +716,7 @@
             <div class="item-info-desc">Dáricos preciosos para aceleração e prestígio.</div>
             <div class="item-info-cost">R$ 14,90 (Receba 500 Gemas)</div>
           </div>
-          <button class="rts-btn highlight" onclick="buyStore(500, 0)">Comprar</button>
+          <button class="rts-btn highlight" onclick="buyStore(500)">Comprar</button>
         </div>
 
         <div class="catalog-item-card">
@@ -730,7 +725,7 @@
             <div class="item-info-desc">Proteção inviolável contra ataques de outras vilas.</div>
             <div class="item-info-cost">R$ 19,90 (+48h Escudo)</div>
           </div>
-          <button class="rts-btn highlight" onclick="buyStore(150, 48)">Comprar</button>
+          <button class="rts-btn highlight" onclick="buyStore(150)">Comprar</button>
         </div>
       </div>
     </div>
@@ -740,26 +735,34 @@
 
 <script>
   // ============================================================
-  // MOTOR RTS ISOMÉTRICO 2.5D (ESTILO GENIE ENGINE)
+  // MOTOR RTS ISOMÉTRICO 2.5D (HD OPEN SOURCE SPRITES)
   // ============================================================
   const GRID_SIZE = 40;
   const TILE_W = 64;
   const TILE_H = 32;
 
-  // Repositório de Sprites RTS Pré-Renderizados
+  // Catálogo de Sprites Pré-Renderizados (0 A.D., Genie Engine, Flare)
   const SPRITES = {};
   const SPRITE_URLS = {
+    // Edifícios
     apadana: 'assets/sprites/persian_apadana.png',
+    barracks: 'assets/sprites/persian_barracks.png',
     farm: 'assets/sprites/persian_farm.png',
     sawmill: 'assets/sprites/persian_sawmill.png',
-    barracks: 'assets/sprites/persian_barracks.png',
     tower: 'assets/sprites/persian_tower.png',
-    palm_tree: 'assets/sprites/palm_tree.png',
-    desert_rock: 'assets/sprites/desert_rock.png',
+    house: 'assets/sprites/persian_house.png',
+    mine: 'assets/sprites/persian_mine.png',
+    // Cenário e Vegetação
+    cypress_tree: 'assets/sprites/cypress_tree.png',
+    normal_tree: 'assets/sprites/normal_tree.png',
+    gold_ore: 'assets/sprites/gold_ore.png',
+    stone_ore: 'assets/sprites/stone_ore.png',
+    // Terrenos Isométricos Texturizados
     tile_sand: 'assets/sprites/tile_sand.png',
     tile_water: 'assets/sprites/tile_water.png',
     tile_road: 'assets/sprites/tile_road.png',
     tile_fertile: 'assets/sprites/tile_fertile.png',
+    // Tropas Animadas em 3D
     immortal_0: 'assets/sprites/immortal_walk_0.png',
     immortal_1: 'assets/sprites/immortal_walk_1.png',
     immortal_2: 'assets/sprites/immortal_walk_2.png',
@@ -767,16 +770,17 @@
     archer_0: 'assets/sprites/archer_walk_0.png',
     archer_1: 'assets/sprites/archer_walk_1.png',
     archer_2: 'assets/sprites/archer_walk_2.png',
+    archer_3: 'assets/sprites/archer_walk_3.png',
+    // Retratos Históricos 0 A.D.
     portrait_persia: 'assets/sprites/portrait_persia.png',
     portrait_apadana: 'assets/sprites/portrait_apadana.png',
+    portrait_barracks: 'assets/sprites/portrait_barracks.png',
     portrait_immortal: 'assets/sprites/portrait_immortal.png',
     portrait_archer: 'assets/sprites/portrait_archer.png',
-    portrait_barracks: 'assets/sprites/portrait_barracks.png',
     portrait_farm: 'assets/sprites/portrait_farm.png'
   };
 
   let spritesLoaded = 0;
-  const totalSprites = Object.keys(SPRITE_URLS).length;
   for (const [key, url] of Object.entries(SPRITE_URLS)) {
     const img = new Image();
     img.src = url;
@@ -795,19 +799,16 @@
     immortals: 15,
     archers: 20,
     terrain: [],
-    // Objetos de Cenário (Palmeiras e Rochas)
     scenery: [],
-    // Edifícios Persas
     buildings: [
-      { id: 'bld_center', type: 'CENTRO_IMPERIAL', name: 'Apadana de Dario I', gridX: 18, gridY: 18, w: 4, h: 4, hp: 2800, maxHp: 2800, spriteKey: 'apadana', anchorX: 128, anchorY: 195, portrait: 'portrait_apadana' },
-      { id: 'bld_farm', type: 'FAZENDA', name: 'Fazenda Qanat', gridX: 13, gridY: 18, w: 3, h: 3, hp: 1200, maxHp: 1200, spriteKey: 'farm', anchorX: 96, anchorY: 115, portrait: 'portrait_farm' },
-      { id: 'bld_sawmill', type: 'SERRARIA', name: 'Serraria de Cedro', gridX: 24, gridY: 18, w: 3, h: 3, hp: 1400, maxHp: 1400, spriteKey: 'sawmill', anchorX: 96, anchorY: 115, portrait: 'portrait_farm' },
-      { id: 'bld_barracks', type: 'QUARTEL', name: 'Quartel dos Imortais', gridX: 18, gridY: 24, w: 3, h: 3, hp: 2100, maxHp: 2100, spriteKey: 'barracks', anchorX: 96, anchorY: 130, portrait: 'portrait_barracks' },
-      { id: 'bld_tower', type: 'TORRE_ARQUEIROS', name: 'Torre de Guarda de Susa', gridX: 18, gridY: 14, w: 2, h: 2, hp: 1600, maxHp: 1600, spriteKey: 'tower', anchorX: 64, anchorY: 155, portrait: 'portrait_archer' }
+      { id: 'bld_center', type: 'CENTRO_IMPERIAL', name: 'Apadana de Dario I', gridX: 18, gridY: 18, w: 4, h: 4, hp: 2800, maxHp: 2800, spriteKey: 'apadana', anchorX: 128, anchorY: 340, portrait: 'portrait_apadana' },
+      { id: 'bld_farm', type: 'FAZENDA', name: 'Fazenda Qanat', gridX: 13, gridY: 18, w: 3, h: 3, hp: 1200, maxHp: 1200, spriteKey: 'farm', anchorX: 64, anchorY: 180, portrait: 'portrait_farm' },
+      { id: 'bld_sawmill', type: 'SERRARIA', name: 'Serraria de Cedro', gridX: 24, gridY: 18, w: 3, h: 3, hp: 1400, maxHp: 1400, spriteKey: 'sawmill', anchorX: 96, anchorY: 180, portrait: 'portrait_farm' },
+      { id: 'bld_barracks', type: 'QUARTEL', name: 'Quartel dos Imortais', gridX: 18, gridY: 24, w: 3, h: 3, hp: 2100, maxHp: 2100, spriteKey: 'barracks', anchorX: 96, anchorY: 280, portrait: 'portrait_barracks' },
+      { id: 'bld_tower', type: 'TORRE_ARQUEIROS', name: 'Torre de Guarda de Susa', gridX: 18, gridY: 14, w: 2, h: 2, hp: 1600, maxHp: 1600, spriteKey: 'tower', anchorX: 32, anchorY: 90, portrait: 'portrait_archer' }
     ],
-    // Tropas animadas patrulhando
     units: [
-      { id: 'u1', type: 'IMMORTAL', name: 'Imortal Aquemênida', gridX: 16, gridY: 20, startX: 8, endX: 32, dir: 1, speed: 0.035, hp: 320, maxHp: 320, attack: 28, armor: 18, portrait: 'portrait_immortal' },
+      { id: 'u1', type: 'IMMORTAL', name: 'Imortal Aquemênida', gridX: 15, gridY: 20, startX: 8, endX: 32, dir: 1, speed: 0.035, hp: 320, maxHp: 320, attack: 28, armor: 18, portrait: 'portrait_immortal' },
       { id: 'u2', type: 'IMMORTAL', name: 'Imortal Aquemênida', gridX: 22, gridY: 20, startX: 8, endX: 32, dir: 1, speed: 0.035, hp: 320, maxHp: 320, attack: 28, armor: 18, portrait: 'portrait_immortal' },
       { id: 'u3', type: 'ARCHER', name: 'Arqueiro de Susa', gridX: 28, gridY: 20, startX: 12, endX: 34, dir: -1, speed: 0.04, hp: 180, maxHp: 180, attack: 22, armor: 8, portrait: 'portrait_archer' }
     ],
@@ -829,7 +830,6 @@
     }
   };
 
-  // Inicializa mapa e terreno
   function initWorld() {
     state.terrain = [];
     state.scenery = [];
@@ -840,22 +840,15 @@
         let type = 'SAND';
         let walkable = true;
 
-        // Oásis verdejante no quadrante nordeste
         if (Math.hypot(x - 6, y - 6) <= 3.2) {
           type = 'OASIS';
           walkable = false;
-        }
-        // Afloramento rochoso escarpado
-        else if (Math.hypot(x - 33, y - 7) <= 2.2) {
+        } else if (Math.hypot(x - 33, y - 7) <= 2.2) {
           type = 'ROCK';
           walkable = false;
-        }
-        // Estrada Real Persa (Cruzando horizontalmente na coordenada Y: 20)
-        else if (y === 20 && x >= 2 && x <= 38) {
+        } else if (y === 20 && x >= 2 && x <= 38) {
           type = 'ROAD';
-        }
-        // Solo irrigado ao redor das fazendas Qanat
-        else if (x >= 12 && x <= 16 && y >= 17 && y <= 21) {
+        } else if (x >= 12 && x <= 16 && y >= 17 && y <= 21) {
           type = 'FERTILE';
         }
 
@@ -863,29 +856,36 @@
       }
     }
 
-    // Adiciona palmeiras ao redor do oásis e bordas
-    const palmCoords = [
-      { x: 3, y: 5 }, { x: 9, y: 4 }, { x: 7, y: 10 }, { x: 4, y: 8 },
-      { x: 10, y: 8 }, { x: 15, y: 22 }, { x: 26, y: 16 }, { x: 30, y: 22 }
+    // Vegetação natural ao redor do oásis
+    const treeCoords = [
+      { x: 3, y: 5, t: 'cypress_tree', ax: 12, ay: 50 },
+      { x: 9, y: 4, t: 'normal_tree', ax: 14, ay: 48 },
+      { x: 7, y: 10, t: 'cypress_tree', ax: 12, ay: 50 },
+      { x: 4, y: 8, t: 'normal_tree', ax: 14, ay: 48 },
+      { x: 10, y: 8, t: 'cypress_tree', ax: 12, ay: 50 },
+      { x: 15, y: 22, t: 'normal_tree', ax: 14, ay: 48 },
+      { x: 26, y: 16, t: 'cypress_tree', ax: 12, ay: 50 },
+      { x: 30, y: 22, t: 'normal_tree', ax: 14, ay: 48 }
     ];
-    for (const c of palmCoords) {
-      state.scenery.push({ type: 'PALM', gridX: c.x, gridY: c.y, spriteKey: 'palm_tree', anchorX: 48, anchorY: 114 });
+    for (const c of treeCoords) {
+      state.scenery.push({ type: 'TREE', gridX: c.x, gridY: c.y, spriteKey: c.t, anchorX: c.ax, anchorY: c.ay });
     }
 
-    // Adiciona rochas
-    const rockCoords = [
-      { x: 32, y: 7 }, { x: 34, y: 6 }, { x: 33, y: 9 }, { x: 35, y: 8 }
+    // Depósitos de Ouro e Pedra na área rochosa
+    const oreCoords = [
+      { x: 32, y: 7, t: 'stone_ore', ax: 32, ay: 34 },
+      { x: 34, y: 6, t: 'gold_ore', ax: 32, ay: 34 },
+      { x: 33, y: 9, t: 'stone_ore', ax: 32, ay: 34 },
+      { x: 35, y: 8, t: 'gold_ore', ax: 32, ay: 34 }
     ];
-    for (const c of rockCoords) {
-      state.scenery.push({ type: 'ROCK', gridX: c.x, gridY: c.y, spriteKey: 'desert_rock', anchorX: 50, anchorY: 52 });
+    for (const c of oreCoords) {
+      state.scenery.push({ type: 'ORE', gridX: c.x, gridY: c.y, spriteKey: c.t, anchorX: c.ax, anchorY: c.ay });
     }
 
-    // Seleciona Apadana por padrão
     state.selectedEntity = state.buildings[0];
   }
   initWorld();
 
-  // Canvas Principal e Minimap
   const canvas = document.getElementById('isometric-canvas');
   const ctx = canvas.getContext('2d');
   const minimapCanvas = document.getElementById('minimap-canvas');
@@ -913,7 +913,6 @@
     state.camera.targetZoom = Math.max(0.6, Math.min(2.2, state.camera.targetZoom * factor));
   }
 
-  // Matemática Isométrica 2:1
   function gridToScreen(gx, gy) {
     const isoX = (gx - gy) * (TILE_W / 2) * state.camera.zoom + state.camera.x;
     const isoY = (gx + gy) * (TILE_H / 2) * state.camera.zoom + state.camera.y;
@@ -945,15 +944,12 @@
     return true;
   }
 
-  // ============================================================
-  // LOOP PRINCIPAL DE RENDERIZAÇÃO RTS (60 FPS)
-  // ============================================================
+  // LOOP DE RENDERIZAÇÃO
   let globalTick = 0;
 
   function render() {
     globalTick++;
 
-    // Suavização de Câmera
     state.camera.x += (state.camera.targetX - state.camera.x) * 0.25;
     state.camera.y += (state.camera.targetY - state.camera.y) * 0.25;
     state.camera.zoom += (state.camera.targetZoom - state.camera.zoom) * 0.2;
@@ -964,16 +960,14 @@
 
     ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-    // Fundo desértico de horizonte
-    ctx.fillStyle = '#0b0f14';
+    ctx.fillStyle = '#080c10';
     ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-    // 1. RENDERIZAÇÃO DO TERRENO TEXTURIZADO ISOMÉTRICO
+    // 1. TERRENO TEXTURIZADO ISOMÉTRICO
     for (let gx = 0; gx < GRID_SIZE; gx++) {
       for (let gy = 0; gy < GRID_SIZE; gy++) {
         const pos = gridToScreen(gx, gy);
 
-        // Culling
         if (pos.x < -100 || pos.x > canvas.width + 100 || pos.y < -100 || pos.y > canvas.height + 100) continue;
 
         const cell = state.terrain[gx][gy];
@@ -985,7 +979,6 @@
         if (tileSprite && tileSprite.complete && tileSprite.naturalWidth > 0) {
           ctx.drawImage(tileSprite, pos.x - halfW, pos.y, TILE_W * z, TILE_H * z);
         } else {
-          // Fallback polígono
           ctx.beginPath();
           ctx.moveTo(pos.x, pos.y);
           ctx.lineTo(pos.x + halfW, pos.y + halfH);
@@ -998,7 +991,7 @@
       }
     }
 
-    // 2. CURSOR HOVER DE CÉLULA (Diamante Dourado)
+    // 2. CURSOR HOVER
     const hPos = gridToScreen(state.hoveredGrid.x, state.hoveredGrid.y);
     if (state.hoveredGrid.x >= 0 && state.hoveredGrid.x < GRID_SIZE && state.hoveredGrid.y >= 0 && state.hoveredGrid.y < GRID_SIZE) {
       ctx.beginPath();
@@ -1037,8 +1030,7 @@
       }
     }
 
-    // 4. ENTIDADES COM PROFUNDIDADE (Y-SORTING)
-    // Coleta todos os objetos: Cenário, Edifícios e Soldados
+    // 4. ENTIDADES COM Y-SORTING
     const renderQueue = [];
 
     for (const sc of state.scenery) {
@@ -1050,7 +1042,6 @@
     }
 
     for (const u of state.units) {
-      // Atualiza posição do soldado
       u.gridX += u.dir * u.speed;
       if (u.gridX > u.endX) { u.gridX = u.endX; u.dir = -1; }
       if (u.gridX < u.startX) { u.gridX = u.startX; u.dir = 1; }
@@ -1059,24 +1050,16 @@
 
     renderQueue.sort((a, b) => a.depth - b.depth);
 
-    // Desenha entidades ordenadas por profundidade
     for (const item of renderQueue) {
-      if (item.type === 'SCENERY') {
-        renderScenery(item.obj, z);
-      } else if (item.type === 'BUILDING') {
-        renderBuilding(item.obj, z);
-      } else if (item.type === 'UNIT') {
-        renderUnit(item.obj, z);
-      }
+      if (item.type === 'SCENERY') renderScenery(item.obj, z);
+      else if (item.type === 'BUILDING') renderBuilding(item.obj, z);
+      else if (item.type === 'UNIT') renderUnit(item.obj, z);
     }
 
-    // 5. ATUALIZA O RADAR MINIMAP
     renderMinimap();
-
     requestAnimationFrame(render);
   }
 
-  // Renderiza Cenário (Palmeiras, Rochas)
   function renderScenery(sc, z) {
     const pos = gridToScreen(sc.gridX, sc.gridY);
     const sprite = SPRITES[sc.spriteKey];
@@ -1087,16 +1070,13 @@
     }
   }
 
-  // Renderiza Edifício com Alta Definição RTS
   function renderBuilding(bld, z) {
-    // Ponto central da base do edifício
     const footCenterX = bld.gridX + bld.w / 2;
     const footCenterY = bld.gridY + bld.h / 2;
     const pos = gridToScreen(footCenterX, footCenterY);
 
     const isSelected = state.selectedEntity && state.selectedEntity.id === bld.id;
 
-    // Anel de Seleção RTS sob o edifício
     if (isSelected) {
       ctx.save();
       ctx.beginPath();
@@ -1117,9 +1097,8 @@
       const drawY = pos.y - (bld.anchorY * z);
       ctx.drawImage(sprite, drawX, drawY, sw, sh);
 
-      // Barra de Vida e Nome flutuante se selecionado
       if (isSelected) {
-        ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
+        ctx.fillStyle = 'rgba(0, 0, 0, 0.75)';
         ctx.fillRect(pos.x - 40 * z, drawY - 14 * z, 80 * z, 10 * z);
         ctx.fillStyle = '#22c55e';
         const hpPercent = bld.hp / bld.maxHp;
@@ -1128,34 +1107,29 @@
     }
   }
 
-  // Renderiza Soldado Animado
   function renderUnit(u, z) {
     const pos = gridToScreen(u.gridX, u.gridY);
     const isSelected = state.selectedEntity && state.selectedEntity.id === u.id;
 
-    // Sombra do soldado
     ctx.save();
     ctx.beginPath();
-    ctx.ellipse(pos.x, pos.y + 4 * z, 12 * z, 5 * z, 0, 0, Math.PI * 2);
-    ctx.fillStyle = 'rgba(15, 12, 10, 0.5)';
+    ctx.ellipse(pos.x, pos.y + 6 * z, 14 * z, 6 * z, 0, 0, Math.PI * 2);
+    ctx.fillStyle = 'rgba(12, 10, 8, 0.55)';
     ctx.fill();
 
-    // Anel de seleção sob soldado
     if (isSelected) {
       ctx.beginPath();
-      ctx.ellipse(pos.x, pos.y + 4 * z, 16 * z, 8 * z, 0, 0, Math.PI * 2);
+      ctx.ellipse(pos.x, pos.y + 6 * z, 18 * z, 8 * z, 0, 0, Math.PI * 2);
       ctx.strokeStyle = '#22c55e';
       ctx.lineWidth = 2;
       ctx.stroke();
     }
 
-    // Seleção de Frame da Animação
     let sprite;
+    const frameIndex = Math.floor(globalTick / 9) % 4;
     if (u.type === 'IMMORTAL') {
-      const frameIndex = Math.floor(globalTick / 8) % 4;
       sprite = SPRITES[`immortal_${frameIndex}`];
     } else {
-      const frameIndex = Math.floor(globalTick / 10) % 3;
       sprite = SPRITES[`archer_${frameIndex}`];
     }
 
@@ -1163,41 +1137,36 @@
       const sw = sprite.naturalWidth * z;
       const sh = sprite.naturalHeight * z;
       ctx.save();
-      // Se estiver andando para a esquerda, espelha horizontalmente
       if (u.dir < 0) {
         ctx.translate(pos.x, pos.y);
         ctx.scale(-1, 1);
-        ctx.drawImage(sprite, -32 * z, -54 * z, sw, sh);
+        ctx.drawImage(sprite, -32 * z, -76 * z, sw, sh);
       } else {
-        ctx.drawImage(sprite, pos.x - 32 * z, pos.y - 54 * z, sw, sh);
+        ctx.drawImage(sprite, pos.x - 32 * z, pos.y - 76 * z, sw, sh);
       }
       ctx.restore();
 
-      // Mini Pip de HP
       if (isSelected) {
-        ctx.fillStyle = 'rgba(0, 0, 0, 0.8)';
-        ctx.fillRect(pos.x - 16 * z, pos.y - 62 * z, 32 * z, 5 * z);
+        ctx.fillStyle = 'rgba(0, 0, 0, 0.85)';
+        ctx.fillRect(pos.x - 18 * z, pos.y - 84 * z, 36 * z, 6 * z);
         ctx.fillStyle = '#22c55e';
-        ctx.fillRect(pos.x - 15 * z, pos.y - 61 * z, 30 * z * (u.hp / u.maxHp), 3 * z);
+        ctx.fillRect(pos.x - 17 * z, pos.y - 83 * z, 34 * z * (u.hp / u.maxHp), 4 * z);
       }
     }
     ctx.restore();
   }
 
-  // ============================================================
-  // RADAR MINIMAP RTS
-  // ============================================================
+  // RADAR MINIMAP
   function renderMinimap() {
     const mw = minimapCanvas.width;
     const mh = minimapCanvas.height;
 
-    miniCtx.fillStyle = '#10151c';
+    miniCtx.fillStyle = '#0f141b';
     miniCtx.fillRect(0, 0, mw, mh);
 
     const cellW = mw / GRID_SIZE;
     const cellH = mh / GRID_SIZE;
 
-    // Desenha terrenos
     for (let x = 0; x < GRID_SIZE; x += 2) {
       for (let y = 0; y < GRID_SIZE; y += 2) {
         const cell = state.terrain[x][y];
@@ -1211,19 +1180,16 @@
       }
     }
 
-    // Desenha edifícios (Verde bandeira)
     miniCtx.fillStyle = '#16a34a';
     for (const bld of state.buildings) {
       miniCtx.fillRect(bld.gridX * cellW, bld.gridY * cellH, bld.w * cellW, bld.h * cellH);
     }
 
-    // Desenha tropas (Pontos amarelos)
     miniCtx.fillStyle = '#fde047';
     for (const u of state.units) {
       miniCtx.fillRect(u.gridX * cellW - 1, u.gridY * cellH - 1, 3, 3);
     }
 
-    // Desenha caixa da viewport da câmera
     const centerGrid = screenToGrid(canvas.width / 2, canvas.height / 2);
     miniCtx.strokeStyle = '#ffffff';
     miniCtx.lineWidth = 1.5;
@@ -1232,7 +1198,6 @@
     miniCtx.strokeRect(centerGrid.x * cellW - viewW / 2, centerGrid.y * cellH - viewH / 2, viewW, viewH);
   }
 
-  // Clique no minimap para salto tático da câmera
   minimapCanvas.addEventListener('click', (e) => {
     const rect = minimapCanvas.getBoundingClientRect();
     const clickX = e.clientX - rect.left;
@@ -1240,15 +1205,12 @@
     const targetGridX = (clickX / minimapCanvas.width) * GRID_SIZE;
     const targetGridY = (clickY / minimapCanvas.height) * GRID_SIZE;
 
-    // Reposiciona a câmera para focar nessa célula
     const pos = gridToScreen(targetGridX, targetGridY);
     state.camera.targetX += (canvas.width / 2) - pos.x;
     state.camera.targetY += (canvas.height / 2) - pos.y;
   });
 
-  // ============================================================
-  // INTERAÇÕES, SELEÇÃO E CONTROLES RTS
-  // ============================================================
+  // SELEÇÃO & CONTROLES
   function selectEntity(entity) {
     state.selectedEntity = entity;
     updateSelectionCard();
@@ -1275,25 +1237,22 @@
     }
 
     if (e.attack) {
-      // É uma unidade
-      typeEl.textContent = `${e.name} • Infantaria Persa`;
+      typeEl.textContent = `${e.name} • Infantaria Imperial Persa`;
       statsEl.innerHTML = `
         <div class="stat-chip">⚔️ Dano: <b>${e.attack}</b></div>
         <div class="stat-chip">🛡️ Defesa: <b>${e.armor}</b></div>
         <div class="stat-chip">🏃 Velocidade: <b>${(e.speed * 40).toFixed(1)}</b></div>
       `;
     } else {
-      // É um edifício
       typeEl.textContent = `Edifício Aquemênida • Nível 3`;
       statsEl.innerHTML = `
-        <div class="stat-chip">🛡️ Resistência: <b>30</b></div>
+        <div class="stat-chip">🛡️ Resistência: <b>35</b></div>
         <div class="stat-chip">📐 Dimensões: <b>${e.w}x${e.h}</b></div>
         <div class="stat-chip">⭐ Estado: <b>Operacional</b></div>
       `;
     }
   }
 
-  // Interação de Mouse & Toque
   canvas.addEventListener('mousedown', (e) => {
     state.camera.isDragging = true;
     state.camera.lastX = e.clientX;
@@ -1321,11 +1280,9 @@
 
   window.addEventListener('mouseup', () => { state.camera.isDragging = false; });
 
-  // Clique no Mundo (Seleção de Entidade ou Construção)
   canvas.addEventListener('click', (e) => {
     const clickGrid = screenToGrid(e.clientX, e.clientY);
 
-    // Se estiver em modo de construção
     if (state.placementPreview) {
       const p = state.placementPreview;
       if (canPlaceBuildingAt(clickGrid.x, clickGrid.y, p.w, p.h)) {
@@ -1338,12 +1295,13 @@
         state.stone -= p.stoneCost;
 
         let spriteKey = 'farm';
-        let anchorX = 96;
-        let anchorY = 115;
+        let anchorX = 64;
+        let anchorY = 180;
         let portrait = 'portrait_farm';
-        if (p.type === 'QUARTEL') { spriteKey = 'barracks'; anchorX = 96; anchorY = 130; portrait = 'portrait_barracks'; }
-        else if (p.type === 'TORRE_ARQUEIROS') { spriteKey = 'tower'; anchorX = 64; anchorY = 155; portrait = 'portrait_archer'; }
-        else if (p.type === 'SERRARIA') { spriteKey = 'sawmill'; anchorX = 96; anchorY = 115; portrait = 'portrait_farm'; }
+        if (p.type === 'QUARTEL') { spriteKey = 'barracks'; anchorX = 96; anchorY = 280; portrait = 'portrait_barracks'; }
+        else if (p.type === 'TORRE_ARQUEIROS') { spriteKey = 'tower'; anchorX = 32; anchorY = 90; portrait = 'portrait_archer'; }
+        else if (p.type === 'SERRARIA') { spriteKey = 'sawmill'; anchorX = 96; anchorY = 180; portrait = 'portrait_farm'; }
+        else if (p.type === 'MINA') { spriteKey = 'mine'; anchorX = 96; anchorY = 180; portrait = 'portrait_farm'; }
 
         const newBld = {
           id: `bld_${Date.now()}`,
@@ -1373,7 +1331,6 @@
       return;
     }
 
-    // Verifica se clicou em um soldado
     for (const u of state.units) {
       if (Math.hypot(clickGrid.x - u.gridX, clickGrid.y - u.gridY) < 1.4) {
         selectEntity(u);
@@ -1382,7 +1339,6 @@
       }
     }
 
-    // Verifica se clicou em um edifício
     for (const bld of state.buildings) {
       if (
         clickGrid.x >= bld.gridX &&
@@ -1397,14 +1353,12 @@
     }
   });
 
-  // Zoom do Mouse Wheel
   canvas.addEventListener('wheel', (e) => {
     e.preventDefault();
     const factor = e.deltaY < 0 ? 1.12 : 0.88;
     adjustZoom(factor);
   }, { passive: false });
 
-  // Touch Mobile Pan & Pinch Zoom
   let touchDist = 0;
   canvas.addEventListener('touchstart', (e) => {
     if (e.touches.length === 1) {
@@ -1439,9 +1393,6 @@
 
   canvas.addEventListener('touchend', () => { state.camera.isDragging = false; });
 
-  // ============================================================
-  // GESTÃO DE CONSTRUÇÃO E RECURSOS
-  // ============================================================
   function startBuildingPlacement(type, w, h, woodCost, stoneCost) {
     state.placementPreview = { type, w, h, woodCost, stoneCost };
     closeModal('modal-build');
@@ -1454,7 +1405,7 @@
   function cancelBuildingPlacement() {
     state.placementPreview = null;
     const btn = document.getElementById('btn-build');
-    btn.innerHTML = '<span>🔨</span> Erguer Obras';
+    btn.innerHTML = '<span>🔨</span> Obras';
     btn.onclick = openBuildModal;
   }
 
@@ -1482,7 +1433,6 @@
     document.getElementById('val-pop').textContent = `${state.immortals + state.archers}/60`;
   }
 
-  // Produção Econômica Contínua
   setInterval(() => {
     state.food += 3;
     state.wood += 2;
@@ -1505,7 +1455,6 @@
 
     if (type === 'IMMORTAL') {
       state.immortals += count;
-      // Adiciona soldado patrulhando
       state.units.push({
         id: `u_${Date.now()}`,
         type: 'IMMORTAL',
@@ -1545,7 +1494,7 @@
     closeModal('modal-train');
     updateHud();
     playAudioFanfare();
-    showToast(`⚔️ +${count} tropas persas incorporadas ao exército!`);
+    showToast(`⚔️ +${count} tropas imperiais incorporadas à Guarda!`);
   }
 
   function executePvEBattle(name, goldReward, stoneReward, gemsReward) {
@@ -1561,10 +1510,10 @@
   function executePvPBattle() {
     const log = document.getElementById('battle-live-log');
     log.style.display = 'block';
-    log.innerHTML = '⚡ [INÍCIO DA BATALHA ASSÍNCRONA AUTORIZADA]<br>';
+    log.innerHTML = '⚡ [INÍCIO DA BATALHA DETERMINÍSTICA ASSÍNCRONA]<br>';
 
     setTimeout(() => {
-      log.innerHTML += '🏹 [T+3s] Imortais formam parede de escudos Spara sob chuva de flechas...<br>';
+      log.innerHTML += '🏹 [T+3s] Imortais formam falange sob estandartes aquemênidas...<br>';
     }, 400);
 
     setTimeout(() => {
@@ -1581,7 +1530,7 @@
       state.food += 4100;
       updateHud();
       playAudioFanfare();
-      showToast('🏆 Grande Vitória Imperial! Vila saqueada com 3 Estrelas!');
+      showToast('🏆 Vitória Imperial Esmagadora! Vila saqueada com 3 Estrelas!');
     }, 1800);
   }
 
@@ -1596,7 +1545,7 @@
     showToast('🛡️ 5 Imortais doados à Guarda de Persépolis! +50 Honra!');
   }
 
-  function buyStore(gems, shieldHours) {
+  function buyStore(gems) {
     closeModal('modal-store');
     state.gems += gems;
     updateHud();
@@ -1604,7 +1553,6 @@
     showToast(`💎 Tesouro creditado com sucesso! (+${gems} Gemas)`);
   }
 
-  // Síntese de Áudio RTS (Web Audio API)
   let audioCtx = null;
   function getAudio() {
     if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
@@ -1633,7 +1581,6 @@
     setTimeout(() => playAudioTone(659, 0.3), 240);
   }
 
-  // Inicialização
   updateHud();
   updateSelectionCard();
   render();

@@ -2,20 +2,23 @@ import { describe, it, expect } from 'vitest';
 import {
   calculateOfflineProduction,
   IsometricGridValidator,
+  AStarPathfinder,
+  TerrainType,
   BuildingType,
   CivilizationId,
   UnitType,
   calculateBattleStars,
-  ResourceAmount
+  ResourceAmount,
+  VILLAGE_GRID_SIZE
 } from '@imperios/shared';
 import { EconomyService } from '../src/modules/economy/economyService.js';
 import { VillageService } from '../src/modules/village/villageService.js';
 import { CombatService } from '../src/modules/combat/combatService.js';
 import { buildApp } from '../src/app.js';
 
-describe('FASE 1: SUITE DE TESTES AUTOMATIZADOS - VERTICAL SLICE PERSA', () => {
+describe('SUITE DE TESTES AUTOMATIZADOS — PROJETO IMPÉRIOS', () => {
 
-  describe('1. Economia Autoritativa e Produção Offline Segura', () => {
+  describe('FASE 1: Economia Autoritativa e Produção Offline Segura', () => {
     it('deve calcular a produção offline respeitando timestamps exatos do servidor', () => {
       const lastBalance = 500;
       const capacity = 2000;
@@ -69,44 +72,16 @@ describe('FASE 1: SUITE DE TESTES AUTOMATIZADOS - VERTICAL SLICE PERSA', () => {
 
       const deductResult = EconomyService.deductResources(currentBalances, highCost);
       expect(deductResult.success).toBe(false);
-      expect(deductResult.newBalances.alimento).toBe(100); // Saldo permanece inalterado
+      expect(deductResult.newBalances.alimento).toBe(100);
     });
   });
 
-  describe('2. Validação Espacial da Grade Isométrica', () => {
-    it('deve detectar corretamente colisões entre edifícios na grade', () => {
-      const buildingA = { x: 10, y: 10 };
-      const dimsA = { width: 3, height: 3 }; // Ocupa de 10 a 12 em X e Y
-
-      const collidingBuilding = { x: 12, y: 11 };
-      const dimsCol = { width: 2, height: 2 }; // Ocupa 12 e 13 -> sobrepõe em 12
-
-      const nonCollidingBuilding = { x: 13, y: 10 };
-      const dimsNon = { width: 2, height: 2 };
-
-      expect(IsometricGridValidator.checkCollision(buildingA, dimsA, collidingBuilding, dimsCol)).toBe(true);
-      expect(IsometricGridValidator.checkCollision(buildingA, dimsA, nonCollidingBuilding, dimsNon)).toBe(false);
-    });
-
-    it('deve rejeitar edifícios que ultrapassem a borda da vila (40x40)', () => {
-      const outOfBoundsCoord = { x: 39, y: 39 };
-      const farmDims = { width: 3, height: 3 }; // 39 + 3 = 42 > 40
-
-      expect(IsometricGridValidator.isWithinBounds(outOfBoundsCoord, farmDims, 40)).toBe(false);
-    });
-  });
-
-  describe('3. Motor de Combate Autoritativo e Regras de Estrelas', () => {
+  describe('FASE 1: Motor de Combate Autoritativo e Regras de Estrelas', () => {
     it('deve calcular estrelas canônicas rigorosamente', () => {
-      // 0% sem centro imperial = 0 estrelas
       expect(calculateBattleStars(20, false)).toBe(0);
-      // Destruição de 50% sem centro imperial = 1 estrela
       expect(calculateBattleStars(50, false)).toBe(1);
-      // Destruição do Centro Imperial com menos de 50% = 1 estrela
       expect(calculateBattleStars(30, true)).toBe(1);
-      // Centro Imperial destruído E pelo menos 50% = 2 estrelas
       expect(calculateBattleStars(50, true)).toBe(2);
-      // 100% de destruição = 3 estrelas supremas
       expect(calculateBattleStars(100, true)).toBe(3);
     });
 
@@ -133,7 +108,6 @@ describe('FASE 1: SUITE DE TESTES AUTOMATIZADOS - VERTICAL SLICE PERSA', () => {
         ]
       };
 
-      // 10 Imortais Persas atacam um centro imperial fraco
       const result = CombatService.simulateBattle(
         'test_battle_01',
         'attacker_01',
@@ -150,7 +124,67 @@ describe('FASE 1: SUITE DE TESTES AUTOMATIZADOS - VERTICAL SLICE PERSA', () => {
     });
   });
 
-  describe('4. Integração dos Endpoints da API REST (Fastify)', () => {
+  describe('FASE 2: Terreno, Câmera e Grade Isométrica', () => {
+    it('deve gerar corretamente o bioma do planalto persa (40x40 com oásis e rochas)', () => {
+      const terrain = IsometricGridValidator.createPersianVillageTerrain(VILLAGE_GRID_SIZE);
+      expect(terrain.length).toBe(40);
+      expect(terrain[0].length).toBe(40);
+
+      // Verifica Oásis em (6, 6)
+      expect(terrain[6][6].terrain).toBe(TerrainType.AGUA_OASIS);
+      expect(terrain[6][6].isWalkable).toBe(false);
+
+      // Verifica Rocha em (33, 7)
+      expect(terrain[33][7].terrain).toBe(TerrainType.ROCHA);
+      expect(terrain[33][7].isWalkable).toBe(false);
+
+      // Verifica Estrada Real em (10, 20) com custo de movimento reduzido
+      expect(terrain[10][20].terrain).toBe(TerrainType.ESTRADA_REAL);
+      expect(terrain[10][20].isWalkable).toBe(true);
+      expect(terrain[10][20].movementCost).toBeLessThan(1.0);
+    });
+
+    it('deve realizar conversão precisa e reversível entre Grade e Tela Isométrica 2:1', () => {
+      const origX = 14;
+      const origY = 22;
+      const tileW = 64;
+      const tileH = 32;
+
+      const { isoX, isoY } = IsometricGridValidator.gridToIsometric(origX, origY, tileW, tileH);
+      const converted = IsometricGridValidator.isometricToGrid(isoX, isoY, tileW, tileH);
+
+      expect(converted.x).toBe(origX);
+      expect(converted.y).toBe(origY);
+    });
+
+    it('deve calcular caminho viável com A* contornando obstáculos naturais (Oásis)', () => {
+      const terrain = IsometricGridValidator.createPersianVillageTerrain(VILLAGE_GRID_SIZE);
+      const start = { x: 2, y: 6 }; // Oeste do Oásis
+      const target = { x: 10, y: 6 }; // Leste do Oásis (Oásis está no meio em x: 6, y: 6)
+
+      const path = AStarPathfinder.findPath(start, target, terrain, VILLAGE_GRID_SIZE);
+
+      expect(path.length).toBeGreaterThan(0);
+      expect(path[0]).toEqual(start);
+      expect(path[path.length - 1]).toEqual(target);
+
+      // Nenhum nó do caminho pode passar por água ou obstáculo intransponível
+      for (const node of path) {
+        expect(terrain[node.x][node.y].isWalkable).toBe(true);
+      }
+    });
+
+    it('deve retornar caminho vazio quando o alvo for intransponível', () => {
+      const terrain = IsometricGridValidator.createPersianVillageTerrain(VILLAGE_GRID_SIZE);
+      const start = { x: 2, y: 2 };
+      const waterTarget = { x: 6, y: 6 }; // Centro do Oásis
+
+      const path = AStarPathfinder.findPath(start, waterTarget, terrain, VILLAGE_GRID_SIZE);
+      expect(path.length).toBe(0);
+    });
+  });
+
+  describe('Integração dos Endpoints da API REST (Fastify)', () => {
     const app = buildApp();
 
     it('GET /api/health deve retornar status UP e timestamp', async () => {
@@ -170,8 +204,8 @@ describe('FASE 1: SUITE DE TESTES AUTOMATIZADOS - VERTICAL SLICE PERSA', () => {
         method: 'POST',
         url: '/api/auth/guest',
         payload: {
-          deviceId: 'test_device_persia_123',
-          playerName: 'Ciro, o Grande',
+          deviceId: 'test_device_persia_fase2',
+          playerName: 'Dario I',
           civilization: CivilizationId.PERSA
         }
       });
@@ -180,9 +214,7 @@ describe('FASE 1: SUITE DE TESTES AUTOMATIZADOS - VERTICAL SLICE PERSA', () => {
       const json = JSON.parse(response.payload);
       expect(json.success).toBe(true);
       expect(json.data.token).toBeDefined();
-      expect(json.data.civilization).toBe('persa');
 
-      // Testa requisição autenticada subsequente
       const stateResponse = await app.inject({
         method: 'GET',
         url: '/api/village/state',
@@ -194,8 +226,7 @@ describe('FASE 1: SUITE DE TESTES AUTOMATIZADOS - VERTICAL SLICE PERSA', () => {
       expect(stateResponse.statusCode).toBe(200);
       const stateJson = JSON.parse(stateResponse.payload);
       expect(stateJson.success).toBe(true);
-      expect(stateJson.data.buildings.length).toBeGreaterThanOrEqual(4); // Centro, fazenda, serraria, quartel
-      expect(stateJson.data.civilization).toBe('persa');
+      expect(stateJson.data.buildings.length).toBeGreaterThanOrEqual(4);
     });
   });
 

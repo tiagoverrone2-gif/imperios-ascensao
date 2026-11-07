@@ -3,19 +3,21 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>IMPÉRIOS — Ascensão das Civilizações (RTS Clássico Genie Engine HD)</title>
+  <title>GALAXY IMPÉRIOS — Ascensão das Civilizações (Estilo Galaxy Life)</title>
   <style>
     :root {
-      --bg-dark: #070a0e;
-      --rts-panel-bg: #14181f;
-      --rts-panel-border: #4a3e26;
-      --rts-gold: #e5b338;
-      --rts-gold-bright: #ffe277;
-      --rts-gold-dark: #8c6a1e;
-      --rts-crimson: #8b1c1c;
-      --rts-card-bg: #181f2a;
-      --text-main: #f0f3f6;
-      --text-muted: #9ba8b8;
+      --space-bg: #090b14;
+      --gl-gold: #ffc400;
+      --gl-gold-dark: #b87a00;
+      --gl-orange: #ff7b00;
+      --gl-cyan: #00e5ff;
+      --gl-cyan-dark: #0088a3;
+      --gl-purple: #a855f7;
+      --gl-green: #22c55e;
+      --gl-red: #ef4444;
+      --gl-panel: rgba(18, 24, 38, 0.94);
+      --gl-border: #3b4b68;
+      --gl-border-glow: #00e5ff;
     }
 
     * {
@@ -24,15 +26,15 @@
       padding: 0;
       user-select: none;
       -webkit-user-select: none;
-      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      font-family: 'Segoe UI', system-ui, -apple-system, Roboto, sans-serif;
     }
 
     body, html {
       width: 100%;
       height: 100%;
       overflow: hidden;
-      background-color: var(--bg-dark);
-      color: var(--text-main);
+      background: radial-gradient(circle at center, #16112c 0%, #080a14 100%);
+      color: #fff;
     }
 
     #game-container {
@@ -49,683 +51,661 @@
       width: 100%;
       height: 100%;
       touch-action: none;
-      cursor: crosshair;
+      cursor: grab;
+    }
+    canvas#isometric-canvas:active {
+      cursor: grabbing;
     }
 
-    /* BARRA SUPERIOR DE RECURSOS RTS */
-    .top-rts-bar {
+    /* ============================================================
+       TOP HUD: GALAXY LIFE SIGNATURE CAPSULES & STAR LEVEL
+       ============================================================ */
+    .gl-top-hud {
       position: absolute;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 50px;
-      background: linear-gradient(180deg, #1d222b 0%, #10141a 100%);
-      border-bottom: 2px solid var(--rts-panel-border);
+      top: 10px;
+      left: 12px;
+      right: 12px;
       display: flex;
-      align-items: center;
       justify-content: space-between;
-      padding: 0 16px;
-      z-index: 100;
-      box-shadow: 0 4px 18px rgba(0, 0, 0, 0.8);
-    }
-
-    .civ-header-badge {
-      display: flex;
       align-items: center;
-      gap: 12px;
+      pointer-events: none;
+      z-index: 100;
+      gap: 10px;
     }
 
-    .civ-flag-icon {
-      width: 36px;
-      height: 36px;
-      border-radius: 4px;
-      border: 1px solid var(--rts-gold);
-      overflow: hidden;
-      background: #000;
-      box-shadow: 0 0 10px rgba(229, 179, 56, 0.5);
-    }
-
-    .civ-flag-icon img {
-      width: 100%;
-      height: 100%;
-      object-fit: cover;
-    }
-
-    .civ-title-box h1 {
-      font-size: 14px;
-      color: var(--rts-gold-bright);
-      letter-spacing: 0.6px;
-      line-height: 1.1;
-    }
-
-    .civ-title-box span {
-      font-size: 11px;
-      color: var(--text-muted);
-    }
-
-    .rts-resources-strip {
+    /* Player Profile & Level Star */
+    .gl-player-card {
+      pointer-events: auto;
       display: flex;
       align-items: center;
       gap: 10px;
-      overflow-x: auto;
+      background: var(--gl-panel);
+      padding: 6px 14px 6px 8px;
+      border-radius: 40px;
+      border: 2px solid var(--gl-border);
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.6);
     }
 
-    .res-box {
-      background: #0a0d12;
-      border: 1px solid #2e3746;
-      border-radius: 4px;
-      padding: 4px 10px;
+    .gl-star-badge {
+      width: 44px;
+      height: 44px;
+      background: linear-gradient(135deg, #ffe066 0%, #f59e0b 100%);
+      border-radius: 50%;
       display: flex;
+      flex-direction: column;
       align-items: center;
-      gap: 6px;
-      font-size: 12px;
-      font-weight: bold;
+      justify-content: center;
+      border: 3px solid #fff;
+      box-shadow: 0 0 12px rgba(245, 158, 11, 0.8);
+      color: #78350f;
+      font-weight: 900;
+      font-size: 14px;
+      line-height: 1;
     }
+    .gl-star-badge span { font-size: 8px; text-transform: uppercase; }
 
-    .res-box.food { color: #86efac; border-color: #22c55e44; }
-    .res-box.wood { color: #fdba74; border-color: #ea580c44; }
-    .res-box.stone { color: #cbd5e1; border-color: #64748b44; }
-    .res-box.iron { color: #93c5fd; border-color: #3b82f644; }
-    .res-box.gold { color: #fde047; border-color: #ca8a0444; }
-    .res-box.gems { color: #67e8f9; border-color: #06b6d444; }
-    .res-box.pop { color: #e2e8f0; border-color: #94a3b844; }
-
-    .apk-cta-btn {
-      background: linear-gradient(135deg, #10b981, #047857);
+    .gl-player-info {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+    .gl-player-name {
+      font-size: 13px;
+      font-weight: bold;
       color: #fff;
-      text-decoration: none;
-      padding: 6px 14px;
-      border-radius: 4px;
-      font-size: 12px;
-      font-weight: bold;
       display: flex;
       align-items: center;
       gap: 6px;
-      border: 1px solid #34d399;
-      box-shadow: 0 0 10px rgba(16, 185, 129, 0.4);
-      transition: all 0.2s;
     }
-
-    .apk-cta-btn:hover {
-      background: linear-gradient(135deg, #059669, #065f46);
-      transform: translateY(-1px);
-    }
-
-    /* CONSOLE INFERIOR RTS (Estilo Star Wars Galactic Battlegrounds / Age of Empires) */
-    .bottom-rts-console {
-      position: absolute;
-      bottom: 0;
-      left: 0;
-      width: 100%;
-      height: 154px;
-      background: linear-gradient(180deg, #191f2a 0%, #0c0f15 100%);
-      border-top: 3px solid var(--rts-panel-border);
-      display: flex;
-      align-items: stretch;
-      z-index: 100;
-      box-shadow: 0 -6px 25px rgba(0, 0, 0, 0.9);
-    }
-
-    /* 1. Radar Minimap */
-    .minimap-panel {
-      width: 185px;
-      border-right: 2px solid var(--rts-panel-border);
-      background: #080b0f;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      padding: 6px;
-      flex-shrink: 0;
-    }
-
-    canvas#minimap-canvas {
-      width: 140px;
-      height: 112px;
-      background: #111720;
-      border: 1px solid var(--rts-gold-dark);
-      cursor: pointer;
-    }
-
-    .minimap-caption {
-      font-size: 10px;
-      color: var(--rts-gold);
-      margin-top: 4px;
-      text-transform: uppercase;
-      letter-spacing: 0.6px;
-    }
-
-    /* 2. Card da Entidade Selecionada */
-    .selection-panel {
-      flex: 1;
-      min-width: 280px;
-      padding: 10px 18px;
-      display: flex;
-      align-items: center;
-      gap: 16px;
-      border-right: 2px solid var(--rts-panel-border);
-      background: radial-gradient(circle at left, rgba(32, 44, 60, 0.6) 0%, rgba(12, 15, 21, 0.8) 100%);
-    }
-
-    .selection-portrait-frame {
-      width: 88px;
-      height: 88px;
-      background: #05070a;
-      border: 2px solid var(--rts-gold);
-      border-radius: 4px;
+    .gl-xp-bar-wrap {
+      width: 120px;
+      height: 8px;
+      background: #0f1523;
+      border-radius: 6px;
+      border: 1px solid #334155;
       overflow: hidden;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      box-shadow: inset 0 0 12px rgba(0, 0, 0, 0.9);
-      flex-shrink: 0;
     }
-
-    .selection-portrait-frame img {
-      width: 100%;
+    .gl-xp-bar-fill {
+      width: 68%;
       height: 100%;
-      object-fit: cover;
+      background: linear-gradient(90deg, #3b82f6, #00e5ff);
+      border-radius: 6px;
     }
 
-    .selection-details {
-      display: flex;
-      flex-direction: column;
-      gap: 4px;
-      flex: 1;
-    }
-
-    .selection-title {
-      font-size: 15px;
-      font-weight: bold;
-      color: var(--rts-gold-bright);
+    /* Glossy Resource Capsules */
+    .gl-resource-capsules {
+      pointer-events: auto;
       display: flex;
       align-items: center;
       gap: 8px;
+      flex-wrap: wrap;
     }
 
-    .selection-type {
-      font-size: 11px;
-      color: var(--text-muted);
-    }
-
-    .rts-hp-bar-wrap {
-      width: 100%;
-      max-width: 250px;
-      height: 13px;
-      background: #090c10;
-      border: 1px solid #334155;
-      border-radius: 2px;
-      overflow: hidden;
-      margin-top: 3px;
+    .gl-capsule {
+      background: var(--gl-panel);
+      border: 2px solid var(--gl-border);
+      border-radius: 20px;
+      padding: 4px 12px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
       position: relative;
     }
 
-    .rts-hp-bar-fill {
-      width: 100%;
-      height: 100%;
-      background: linear-gradient(90deg, #16a34a, #22c55e);
-      transition: width 0.3s;
+    .gl-capsule-icon {
+      font-size: 18px;
+      filter: drop-shadow(0 2px 4px rgba(0,0,0,0.5));
     }
 
-    .rts-hp-bar-text {
-      position: absolute;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      font-size: 9px;
-      font-weight: bold;
+    .gl-capsule-body {
+      display: flex;
+      flex-direction: column;
+      min-width: 75px;
+    }
+    .gl-capsule-val {
+      font-size: 12px;
+      font-weight: 800;
       color: #fff;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      text-shadow: 0 1px 2px #000;
     }
-
-    .selection-stats-row {
-      display: flex;
-      gap: 12px;
-      font-size: 11px;
-      color: #cbd5e1;
-      margin-top: 4px;
-    }
-
-    .stat-chip {
-      display: flex;
-      align-items: center;
-      gap: 4px;
-    }
-
-    /* 3. Grade de Ações RTS */
-    .actions-panel {
-      padding: 10px 14px;
-      display: flex;
-      flex-wrap: wrap;
-      align-content: center;
-      gap: 8px;
-      max-width: 380px;
-    }
-
-    .rts-btn {
-      background: linear-gradient(180deg, #2a3342 0%, #161c24 100%);
-      border: 1px solid var(--rts-gold-dark);
-      color: var(--text-main);
-      padding: 8px 12px;
+    .gl-capsule-bar {
+      width: 100%;
+      height: 5px;
+      background: #0d121d;
       border-radius: 4px;
+      overflow: hidden;
+      margin-top: 1px;
+    }
+    .gl-capsule-fill {
+      height: 100%;
+      border-radius: 4px;
+    }
+    .gl-capsule.gold .gl-capsule-fill { background: linear-gradient(90deg, #f59e0b, #fbbf24); }
+    .gl-capsule.mineral .gl-capsule-fill { background: linear-gradient(90deg, #0284c7, #38bdf8); }
+
+    .gl-chip-pill {
+      background: linear-gradient(135deg, #7e22ce, #a855f7);
+      border: 2px solid #c084fc;
+      border-radius: 20px;
+      padding: 4px 12px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-weight: 900;
+      font-size: 12px;
+      box-shadow: 0 0 10px rgba(168, 85, 247, 0.5);
+    }
+
+    .gl-shield-pill {
+      background: rgba(15, 23, 42, 0.9);
+      border: 2px solid #38bdf8;
+      border-radius: 20px;
+      padding: 4px 10px;
+      font-size: 11px;
+      font-weight: bold;
+      color: #38bdf8;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+    }
+
+    /* ============================================================
+       BOTTOM HUD: GALAXY LIFE JUICY ACTION BUTTONS
+       ============================================================ */
+    .gl-bottom-hud {
+      position: absolute;
+      bottom: 12px;
+      left: 12px;
+      right: 12px;
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-end;
+      pointer-events: none;
+      z-index: 100;
+    }
+
+    /* Botões da Esquerda */
+    .gl-left-actions {
+      pointer-events: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .gl-apk-pill {
+      background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+      color: #fff;
+      text-decoration: none;
+      padding: 8px 16px;
+      border-radius: 25px;
+      font-size: 12px;
+      font-weight: 800;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      border: 2px solid #34d399;
+      box-shadow: 0 4px 15px rgba(16, 185, 129, 0.5);
+      transition: all 0.2s;
+    }
+    .gl-apk-pill:hover {
+      transform: scale(1.05);
+      box-shadow: 0 6px 20px rgba(16, 185, 129, 0.7);
+    }
+
+    .gl-sub-btn {
+      background: var(--gl-panel);
+      border: 2px solid var(--gl-border);
+      color: #fff;
+      padding: 8px 14px;
+      border-radius: 20px;
       font-size: 11px;
       font-weight: bold;
       display: flex;
       align-items: center;
       gap: 6px;
       cursor: pointer;
-      box-shadow: 0 2px 5px rgba(0, 0, 0, 0.4);
       transition: all 0.15s;
     }
-
-    .rts-btn:hover {
-      border-color: var(--rts-gold);
-      background: linear-gradient(180deg, #374358 0%, #1d2530 100%);
-      transform: translateY(-1px);
+    .gl-sub-btn:hover {
+      border-color: var(--gl-cyan);
+      transform: translateY(-2px);
     }
 
-    .rts-btn:active {
-      transform: translateY(1px);
+    /* Botões Grandes de Ação (Galaxy Life Battle & Shop) */
+    .gl-right-actions {
+      pointer-events: auto;
+      display: flex;
+      align-items: center;
+      gap: 14px;
     }
 
-    .rts-btn.highlight {
-      border-color: var(--rts-gold-bright);
-      background: linear-gradient(180deg, #42351c 0%, #201a0e 100%);
-      color: var(--rts-gold-bright);
+    .gl-big-btn {
+      width: 76px;
+      height: 76px;
+      border-radius: 50%;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      border: 4px solid #fff;
+      box-shadow: 0 6px 20px rgba(0, 0, 0, 0.6);
+      transition: all 0.15s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    }
+    .gl-big-btn:hover {
+      transform: scale(1.1);
+    }
+    .gl-big-btn:active {
+      transform: scale(0.95);
     }
 
-    .rts-btn.battle {
-      border-color: #ef4444;
-      background: linear-gradient(180deg, #5c1818 0%, #2b0c0c 100%);
-      color: #fca5a5;
+    .gl-big-btn.attack {
+      background: linear-gradient(135deg, #ef4444 0%, #b91c1c 100%);
+      box-shadow: 0 0 20px rgba(239, 68, 68, 0.8);
+      color: #fff;
     }
+    .gl-big-btn.shop {
+      background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+      box-shadow: 0 0 20px rgba(245, 158, 11, 0.8);
+      color: #fff;
+    }
+    .gl-big-btn-icon { font-size: 26px; }
+    .gl-big-btn-label { font-size: 10px; font-weight: 900; text-transform: uppercase; letter-spacing: 0.5px; }
 
-    .hud-coords {
+    /* ============================================================
+       FLOATING CONTEXT MENU (Quando clica em edifício)
+       ============================================================ */
+    .gl-building-card {
       position: absolute;
-      top: 56px;
-      left: 16px;
-      background: rgba(10, 14, 20, 0.88);
-      border: 1px solid #334155;
-      padding: 4px 10px;
-      border-radius: 4px;
-      font-size: 11px;
-      color: var(--text-muted);
-      z-index: 90;
-      pointer-events: none;
-    }
-
-    .toast-banner {
-      position: absolute;
-      top: 64px;
+      bottom: 96px;
       left: 50%;
       transform: translateX(-50%);
-      background: rgba(18, 24, 32, 0.95);
-      border: 1px solid var(--rts-gold);
-      color: var(--rts-gold-bright);
-      padding: 8px 22px;
-      border-radius: 4px;
-      font-size: 13px;
-      font-weight: bold;
-      z-index: 200;
-      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.7);
+      background: var(--gl-panel);
+      border: 2px solid var(--gl-border-glow);
+      border-radius: 16px;
+      padding: 12px 18px;
       display: none;
-      pointer-events: none;
+      align-items: center;
+      gap: 16px;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.8);
+      z-index: 120;
+      animation: popUp 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    }
+    @keyframes popUp {
+      from { opacity: 0; transform: translate(-50%, 20px) scale(0.9); }
+      to { opacity: 1; transform: translate(-50%, 0) scale(1); }
     }
 
-    /* MODAIS */
-    .rts-modal-overlay {
+    .gl-bld-thumb {
+      width: 54px;
+      height: 54px;
+      border-radius: 12px;
+      background: #0f1523;
+      border: 2px solid var(--gl-gold);
+      overflow: hidden;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .gl-bld-thumb img { width: 100%; height: 100%; object-fit: contain; }
+
+    .gl-bld-info h3 { font-size: 14px; color: var(--gl-gold); font-weight: 800; }
+    .gl-bld-info p { font-size: 11px; color: #94a3b8; }
+
+    .gl-bld-actions {
+      display: flex;
+      gap: 8px;
+    }
+    .gl-action-pill {
+      background: linear-gradient(135deg, #22c55e, #16a34a);
+      border: 2px solid #86efac;
+      color: #fff;
+      padding: 6px 14px;
+      border-radius: 20px;
+      font-size: 11px;
+      font-weight: 800;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      box-shadow: 0 4px 10px rgba(34, 197, 94, 0.4);
+    }
+
+    /* Modais Estilo Galaxy Life */
+    .gl-modal-backdrop {
       position: fixed;
       top: 0;
       left: 0;
       width: 100%;
       height: 100%;
       background: rgba(0, 0, 0, 0.75);
+      backdrop-filter: blur(4px);
       z-index: 300;
       display: none;
       justify-content: center;
       align-items: center;
     }
 
-    .rts-modal-box {
-      background: linear-gradient(180deg, #1c222b 0%, #10141b 100%);
-      border: 2px solid var(--rts-gold);
-      border-radius: 6px;
+    .gl-modal-window {
+      background: linear-gradient(180deg, #1e2638 0%, #101524 100%);
+      border: 3px solid var(--gl-gold);
+      border-radius: 20px;
       width: 90%;
-      max-width: 540px;
-      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.9);
+      max-width: 520px;
+      box-shadow: 0 0 35px rgba(255, 196, 0, 0.35);
       overflow: hidden;
     }
 
-    .rts-modal-header {
-      background: #141920;
-      padding: 12px 18px;
-      border-bottom: 1px solid var(--rts-panel-border);
+    .gl-modal-header {
+      background: #141b2a;
+      padding: 14px 20px;
+      border-bottom: 2px solid var(--gl-border);
       display: flex;
       justify-content: space-between;
       align-items: center;
     }
-
-    .rts-modal-header h2 {
-      font-size: 16px;
-      color: var(--rts-gold-bright);
-    }
-
-    .rts-modal-close {
-      background: transparent;
-      border: none;
-      color: var(--text-muted);
-      font-size: 20px;
+    .gl-modal-header h2 { font-size: 16px; color: var(--gl-gold); font-weight: 900; }
+    .gl-modal-close {
+      background: #ef4444;
+      border: 2px solid #fff;
+      color: #fff;
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      font-weight: 900;
       cursor: pointer;
     }
 
-    .rts-modal-body {
+    .gl-modal-content {
       padding: 16px;
       display: flex;
       flex-direction: column;
-      gap: 10px;
-      max-height: 70vh;
+      gap: 12px;
+      max-height: 65vh;
       overflow-y: auto;
     }
 
-    .catalog-item-card {
-      background: #0f131a;
-      border: 1px solid #2d3748;
-      border-radius: 4px;
-      padding: 10px 14px;
+    .gl-shop-card {
+      background: #0c101a;
+      border: 2px solid var(--gl-border);
+      border-radius: 14px;
+      padding: 12px;
       display: flex;
-      justify-content: space-between;
       align-items: center;
-      transition: border-color 0.2s;
+      justify-content: space-between;
+      gap: 12px;
+      transition: all 0.15s;
+    }
+    .gl-shop-card:hover { border-color: var(--gl-cyan); transform: translateY(-2px); }
+
+    .gl-shop-card-left {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .gl-shop-icon {
+      width: 48px;
+      height: 48px;
+      background: #161e30;
+      border-radius: 10px;
+      border: 2px solid var(--gl-cyan);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 24px;
     }
 
-    .catalog-item-card:hover {
-      border-color: var(--rts-gold);
+    .gl-buy-btn {
+      background: linear-gradient(135deg, #f59e0b, #d97706);
+      border: 2px solid #fde68a;
+      color: #fff;
+      padding: 8px 16px;
+      border-radius: 20px;
+      font-size: 12px;
+      font-weight: 900;
+      cursor: pointer;
+      box-shadow: 0 4px 10px rgba(245, 158, 11, 0.4);
     }
 
-    .item-info-title {
+    /* Toast */
+    .gl-toast {
+      position: absolute;
+      top: 75px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: var(--gl-panel);
+      border: 2px solid var(--gl-cyan);
+      color: #fff;
+      padding: 8px 24px;
+      border-radius: 30px;
       font-size: 13px;
-      font-weight: bold;
-      color: var(--text-main);
+      font-weight: 800;
+      z-index: 250;
+      box-shadow: 0 0 20px rgba(0, 229, 255, 0.5);
+      display: none;
     }
 
-    .item-info-desc {
-      font-size: 11px;
-      color: var(--text-muted);
-      margin: 2px 0;
+    /* Floating Particles */
+    .float-number {
+      position: absolute;
+      font-weight: 900;
+      font-size: 18px;
+      color: #fde047;
+      text-shadow: 0 2px 4px #000;
+      pointer-events: none;
+      animation: floatUp 0.8s ease-out forwards;
+      z-index: 200;
     }
-
-    .item-info-cost {
-      font-size: 11px;
-      color: var(--rts-gold);
-    }
-
-    @media (max-width: 768px) {
-      .bottom-rts-console { height: 135px; }
-      .minimap-panel { width: 135px; }
-      canvas#minimap-canvas { width: 115px; height: 92px; }
-      .selection-panel { padding: 6px 10px; gap: 10px; }
-      .selection-portrait-frame { width: 68px; height: 68px; }
-      .selection-title { font-size: 13px; }
-      .actions-panel { max-width: 240px; gap: 4px; }
-      .rts-btn { padding: 6px 8px; font-size: 10px; }
+    @keyframes floatUp {
+      0% { opacity: 1; transform: translateY(0) scale(1); }
+      100% { opacity: 0; transform: translateY(-40px) scale(1.3); }
     }
   </style>
 </head>
 <body>
 
 <div id="game-container">
+  <!-- Canvas do Planeta e Colônia Isométrica -->
   <canvas id="isometric-canvas"></canvas>
 
-  <!-- Cabeçalho de Recursos -->
-  <header class="top-rts-bar">
-    <div class="civ-header-badge">
-      <div class="civ-flag-icon">
-        <img src="assets/sprites/portrait_persia.png" alt="Emblema Persa">
+  <!-- TOP HUD: ESTILO GALAXY LIFE -->
+  <header class="gl-top-hud">
+    <!-- Star Level & Player Info -->
+    <div class="gl-player-card">
+      <div class="gl-star-badge">
+        12
+        <span>NÍVEL</span>
       </div>
-      <div class="civ-title-box">
-        <h1>IMPÉRIO PERSA AQUEMÊNIDA</h1>
-        <span>Era do Apogeu (III) • Vila de Dario I</span>
+      <div class="gl-player-info">
+        <div class="gl-player-name">Comandante Dario 🪐</div>
+        <div class="gl-xp-bar-wrap">
+          <div class="gl-xp-bar-fill"></div>
+        </div>
       </div>
     </div>
 
-    <div class="rts-resources-strip">
-      <div class="res-box food" title="Alimento colhido dos Qanats">🌾 <span id="val-food">1.250</span></div>
-      <div class="res-box wood" title="Madeira de Cedro das Montanhas">🪵 <span id="val-wood">1.100</span></div>
-      <div class="res-box stone" title="Pedra Talhada de Persépolis">🪨 <span id="val-stone">850</span></div>
-      <div class="res-box iron" title="Ferro Forjado de Armas">⛏️ <span id="val-iron">500</span></div>
-      <div class="res-box gold" title="Dáricos de Ouro Imperial">🪙 <span id="val-gold">920</span></div>
-      <div class="res-box gems" title="Gemas do Tesouro Real">💎 <span id="val-gems">250</span></div>
-      <div class="res-box pop" title="Capacidade Militar e Civil">🛡️ <span id="val-pop">35/60</span></div>
-    </div>
+    <!-- Resource Capsules -->
+    <div class="gl-resource-capsules">
+      <div class="gl-capsule gold">
+        <div class="gl-capsule-icon">🪙</div>
+        <div class="gl-capsule-body">
+          <div class="gl-capsule-val" id="val-gold">14.850</div>
+          <div class="gl-capsule-bar"><div class="gl-capsule-fill" style="width: 65%;"></div></div>
+        </div>
+      </div>
 
-    <a href="/downloads/imperios.apk" class="apk-cta-btn" download>
-      <span>📱</span> Baixar APK Android
-    </a>
+      <div class="gl-capsule mineral">
+        <div class="gl-capsule-icon">⚡</div>
+        <div class="gl-capsule-body">
+          <div class="gl-capsule-val" id="val-minerals">12.200</div>
+          <div class="gl-capsule-bar"><div class="gl-capsule-fill" style="width: 58%;"></div></div>
+        </div>
+      </div>
+
+      <div class="gl-chip-pill">
+        <span>💎</span> <span id="val-chips">350</span> Chips
+      </div>
+
+      <div class="gl-shield-pill">
+        <span>🛡️</span> 47h 50m
+      </div>
+    </div>
   </header>
 
-  <!-- Coordenadas HUD -->
-  <div class="hud-coords" id="hud-coords">
-    Grade: (18, 18) | Terreno: Areia Persa | Zoom: 1.0x
+  <!-- TOAST NOTIFICATION -->
+  <div class="gl-toast" id="gl-toast">Alerta do Comandante</div>
+
+  <!-- FLOATING BUILDING CARD (Aparece ao tocar em edifício) -->
+  <div class="gl-building-card" id="gl-building-card">
+    <div class="gl-bld-thumb">
+      <img id="card-bld-img" src="assets/sprites/galaxy_starbase.png" alt="Edifício">
+    </div>
+    <div class="gl-bld-info">
+      <h3 id="card-bld-title">Base Central Estelar</h3>
+      <p id="card-bld-desc">Nível 3 • Centro da Colônia</p>
+    </div>
+    <div class="gl-bld-actions">
+      <button class="gl-action-pill" onclick="upgradeSelectedBuilding()">
+        <span>⬆️</span> Melhorar
+      </button>
+      <button class="gl-action-pill" style="background: linear-gradient(135deg, #0284c7, #0369a1);" onclick="showBuildingInfo()">
+        <span>ℹ️</span> Info
+      </button>
+    </div>
   </div>
 
-  <div class="toast-banner" id="toast-banner">Notificação</div>
-
-  <!-- Console Inferior RTS (Estilo Star Wars Galactic Battlegrounds) -->
-  <footer class="bottom-rts-console">
-    <!-- 1. Radar Minimap -->
-    <div class="minimap-panel">
-      <canvas id="minimap-canvas" width="140" height="112"></canvas>
-      <div class="minimap-caption">Radar Tático</div>
+  <!-- BOTTOM HUD: GALAXY LIFE BUTTONS -->
+  <footer class="gl-bottom-hud">
+    <div class="gl-left-actions">
+      <a href="/downloads/imperios.apk" class="gl-apk-pill" download>
+        <span>📱</span> Baixar APK Android
+      </a>
+      <button class="gl-sub-btn" onclick="openAllianceModal()">
+        <span>🛡️</span> Aliança Galáctica
+      </button>
     </div>
 
-    <!-- 2. Card da Entidade Selecionada -->
-    <div class="selection-panel" id="selection-panel">
-      <div class="selection-portrait-frame">
-        <img id="sel-portrait" src="assets/sprites/portrait_apadana.png" alt="Retrato 0 A.D.">
+    <div class="gl-right-actions">
+      <!-- Botão Atacar (Galaxy Life Red Button) -->
+      <div class="gl-big-btn attack" onclick="openAttackModal()">
+        <div class="gl-big-btn-icon">⚔️</div>
+        <div class="gl-big-btn-label">Atacar</div>
       </div>
-      <div class="selection-details">
-        <div class="selection-title" id="sel-title">Apadana de Dario I</div>
-        <div class="selection-type" id="sel-type">Centro Imperial • Arquitetura Aquemênida</div>
-        <div class="rts-hp-bar-wrap">
-          <div class="rts-hp-bar-fill" id="sel-hp-bar" style="width: 100%;"></div>
-          <div class="rts-hp-bar-text" id="sel-hp-text">2.800 / 2.800 HP</div>
-        </div>
-        <div class="selection-stats-row" id="sel-stats">
-          <div class="stat-chip">🛡️ Armadura: <b>25</b></div>
-          <div class="stat-chip">👁️ Visão: <b>12</b></div>
-          <div class="stat-chip">🌾 Produção: <b>+150/h</b></div>
-        </div>
-      </div>
-    </div>
 
-    <!-- 3. Grade de Ações -->
-    <div class="actions-panel">
-      <button class="rts-btn highlight" id="btn-build" onclick="openBuildModal()">
-        <span>🔨</span> Obras
-      </button>
-      <button class="rts-btn" onclick="openTrainModal()">
-        <span>⚔️</span> Recrutar
-      </button>
-      <button class="rts-btn battle" onclick="openBattleModal()">
-        <span>⚡</span> Batalhas
-      </button>
-      <button class="rts-btn" onclick="openAllianceModal()">
-        <span>🛡️</span> Aliança
-      </button>
-      <button class="rts-btn" onclick="openStoreModal()">
-        <span>💎</span> Tesouro
-      </button>
-      <button class="rts-btn" onclick="centerCameraOnCenter()">
-        <span>🎯</span> Centralizar
-      </button>
+      <!-- Botão Loja (Galaxy Life Yellow Hammer Button) -->
+      <div class="gl-big-btn shop" onclick="openShopModal()">
+        <div class="gl-big-btn-icon">🏪</div>
+        <div class="gl-big-btn-label">Loja</div>
+      </div>
     </div>
   </footer>
 
-  <!-- MODAL OBRAS -->
-  <div class="rts-modal-overlay" id="modal-build">
-    <div class="rts-modal-box">
-      <div class="rts-modal-header">
-        <h2>🔨 Obras da Civilização Persa</h2>
-        <button class="rts-modal-close" onclick="closeModal('modal-build')">&times;</button>
+  <!-- MODAL LOJA / SHOP -->
+  <div class="gl-modal-backdrop" id="modal-shop">
+    <div class="gl-modal-window">
+      <div class="gl-modal-header">
+        <h2>🏪 Loja de Estruturas & Defesas</h2>
+        <button class="gl-modal-close" onclick="closeModal('modal-shop')">&times;</button>
       </div>
-      <div class="rts-modal-body">
-        <div class="catalog-item-card">
-          <div>
-            <div class="item-info-title">🌾 Fazenda Agrícola de Qanat (3x3)</div>
-            <div class="item-info-desc">Cultura de grãos irrigada por canais no deserto. +120 Alimento/h.</div>
-            <div class="item-info-cost">Custo: 🪵 150 Madeira, 🪨 50 Pedra</div>
+      <div class="gl-modal-content">
+        <div class="gl-shop-card">
+          <div class="gl-shop-card-left">
+            <div class="gl-shop-icon">⛏️</div>
+            <div>
+              <h4 style="color: var(--gl-cyan); font-size: 13px;">Extrator de Minerais (3x3)</h4>
+              <p style="font-size: 11px; color: #94a3b8;">Perfura o geodo e extrai +250 Minerais/h.</p>
+              <span style="font-size: 11px; color: var(--gl-gold);">Custo: 🪙 500 Moedas</span>
+            </div>
           </div>
-          <button class="rts-btn highlight" onclick="startBuildingPlacement('FAZENDA', 3, 3, 150, 50)">Construir</button>
+          <button class="gl-buy-btn" onclick="startPlacement('EXTRACTOR', 3, 3, 500, 0)">Comprar</button>
         </div>
 
-        <div class="catalog-item-card">
-          <div>
-            <div class="item-info-title">🪵 Serraria de Cedro Real (3x3)</div>
-            <div class="item-info-desc">Galpão de corte e estocagem de madeira nobre. +100 Madeira/h.</div>
-            <div class="item-info-cost">Custo: 🪵 120 Madeira, 🪨 80 Pedra</div>
+        <div class="gl-shop-card">
+          <div class="gl-shop-card-left">
+            <div class="gl-shop-icon">🪙</div>
+            <div>
+              <h4 style="color: var(--gl-gold); font-size: 13px;">Banco / Silo Galáctico (3x3)</h4>
+              <p style="font-size: 11px; color: #94a3b8;">Aumenta a capacidade de ouro da colônia.</p>
+              <span style="font-size: 11px; color: var(--gl-cyan);">Custo: ⚡ 600 Minerais</span>
+            </div>
           </div>
-          <button class="rts-btn highlight" onclick="startBuildingPlacement('SERRARIA', 3, 3, 120, 80)">Construir</button>
+          <button class="gl-buy-btn" onclick="startPlacement('BANK', 3, 3, 0, 600)">Comprar</button>
         </div>
 
-        <div class="catalog-item-card">
-          <div>
-            <div class="item-info-title">⛏️ Mina Imperial de Ouro & Ferro (3x3)</div>
-            <div class="item-info-desc">Extração de minério dos montes Zagros. +90 Ouro/h, +60 Ferro/h.</div>
-            <div class="item-info-cost">Custo: 🪵 200 Madeira, 🪨 150 Pedra</div>
+        <div class="gl-shop-card">
+          <div class="gl-shop-card-left">
+            <div class="gl-shop-icon">⚔️</div>
+            <div>
+              <h4 style="color: #f87171; font-size: 13px;">Quartel de Tropas (3x3)</h4>
+              <p style="font-size: 11px; color: #94a3b8;">Treina Marines e Tropas Especiais.</p>
+              <span style="font-size: 11px; color: var(--gl-gold);">Custo: 🪙 800 Moedas</span>
+            </div>
           </div>
-          <button class="rts-btn highlight" onclick="startBuildingPlacement('MINA', 3, 3, 200, 150)">Construir</button>
+          <button class="gl-buy-btn" onclick="startPlacement('BARRACKS', 3, 3, 800, 200)">Comprar</button>
         </div>
 
-        <div class="catalog-item-card">
-          <div>
-            <div class="item-info-title">⚔️ Quartel da Guarda Real (3x3)</div>
-            <div class="item-info-desc">Treinamento dos Imortais e Arqueiros Persas.</div>
-            <div class="item-info-cost">Custo: 🪵 250 Madeira, 🪨 180 Pedra</div>
+        <div class="gl-shop-card">
+          <div class="gl-shop-card-left">
+            <div class="gl-shop-icon">💥</div>
+            <div>
+              <h4 style="color: var(--gl-gold); font-size: 13px;">Canhão de Plasma Defensivo (2x2)</h4>
+              <p style="font-size: 11px; color: #94a3b8;">Dispara rajadas de plasma contra invasores.</p>
+              <span style="font-size: 11px; color: var(--gl-gold);">Custo: 🪙 750 Moedas</span>
+            </div>
           </div>
-          <button class="rts-btn highlight" onclick="startBuildingPlacement('QUARTEL', 3, 3, 250, 180)">Construir</button>
-        </div>
-
-        <div class="catalog-item-card">
-          <div>
-            <div class="item-info-title">🏹 Torre de Guarda de Susa (2x2)</div>
-            <div class="item-info-desc">Torre de tiro defensivo elevada com arqueiros sentinelas.</div>
-            <div class="item-info-cost">Custo: 🪵 180 Madeira, 🪨 220 Pedra</div>
-          </div>
-          <button class="rts-btn highlight" onclick="startBuildingPlacement('TORRE_ARQUEIROS', 2, 2, 180, 220)">Construir</button>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- MODAL RECRUTAMENTO -->
-  <div class="rts-modal-overlay" id="modal-train">
-    <div class="rts-modal-box">
-      <div class="rts-modal-header">
-        <h2>⚔️ Guarda Real & Exército Imperial</h2>
-        <button class="rts-modal-close" onclick="closeModal('modal-train')">&times;</button>
-      </div>
-      <div class="rts-modal-body">
-        <div class="catalog-item-card">
-          <div>
-            <div class="item-info-title">🛡️ Imortal Aquemênida (Infantaria Pesada)</div>
-            <div class="item-info-desc">Armadura de escamas, escudo Spara e lança longa.</div>
-            <div class="item-info-cost">Custo: 🌾 120 Alimento, 🪙 40 Ouro • Dano: 28, HP: 320</div>
-          </div>
-          <button class="rts-btn highlight" onclick="trainUnits('IMMORTAL', 5)">Recrutar (5)</button>
-        </div>
-
-        <div class="catalog-item-card">
-          <div>
-            <div class="item-info-title">🏹 Arqueiro Composto de Susa</div>
-            <div class="item-info-desc">Arco recurvo de alto alcance com flechas de ponta de bronze.</div>
-            <div class="item-info-cost">Custo: 🪵 90 Madeira, 🪙 30 Ouro • Dano: 22, HP: 180</div>
-          </div>
-          <button class="rts-btn highlight" onclick="trainUnits('ARCHER', 5)">Recrutar (5)</button>
+          <button class="gl-buy-btn" onclick="startPlacement('CANNON', 2, 2, 750, 400)">Comprar</button>
         </div>
       </div>
     </div>
   </div>
 
-  <!-- MODAL BATALHA -->
-  <div class="rts-modal-overlay" id="modal-battle">
-    <div class="rts-modal-box">
-      <div class="rts-modal-header">
-        <h2>⚡ Batalhas & Conquistas</h2>
-        <button class="rts-modal-close" onclick="closeModal('modal-battle')">&times;</button>
+  <!-- MODAL ATAQUE / BATALHA ESTELAR -->
+  <div class="gl-modal-backdrop" id="modal-attack">
+    <div class="gl-modal-window">
+      <div class="gl-modal-header">
+        <h2>⚔️ Mapa Galáctico de Invasão</h2>
+        <button class="gl-modal-close" onclick="closeModal('modal-attack')">&times;</button>
       </div>
-      <div class="rts-modal-body">
-        <div class="catalog-item-card">
-          <div>
-            <div class="item-info-title">⚔️ Campanha PvE: Portões de Ishtar (Babilônia)</div>
-            <div class="item-info-desc">A lendária conquista de Ciro, o Grande na Mesopotâmia.</div>
-            <div class="item-info-cost">Recompensa: 🪙 2.500 Ouro, 🪨 2.000 Pedra, 💎 100 Gemas</div>
+      <div class="gl-modal-content">
+        <div class="gl-shop-card">
+          <div class="gl-shop-card-left">
+            <div class="gl-shop-icon">🪐</div>
+            <div>
+              <h4 style="color: #f87171; font-size: 13px;">Colônia Rebelde de Kepler-452</h4>
+              <p style="font-size: 11px; color: #94a3b8;">Defesas moderadas • Espólio: 🪙 4.500, ⚡ 3.800</p>
+            </div>
           </div>
-          <button class="rts-btn battle" onclick="executePvEBattle('Portões de Ishtar', 2500, 2000, 100)">Atacar</button>
+          <button class="gl-buy-btn" style="background: linear-gradient(135deg, #ef4444, #b91c1c);" onclick="launchRaid('Kepler-452', 4500, 3800)">Invadir</button>
         </div>
 
-        <div class="catalog-item-card">
-          <div>
-            <div class="item-info-title">🛡️ Ataque PvP Assíncrono Autorizado</div>
-            <div class="item-info-desc">Alvo: Vila Ateniense do Arconte Nikias (Nível 4).</div>
-            <div class="item-info-cost">Espólio Estimado: 🪙 3.400 Ouro, 🌾 4.100 Alimento</div>
+        <div class="gl-shop-card">
+          <div class="gl-shop-card-left">
+            <div class="gl-shop-icon">☄️</div>
+            <div>
+              <h4 style="color: #f87171; font-size: 13px;">Base Pirata do Cinturão de Órion</h4>
+              <p style="font-size: 11px; color: #94a3b8;">Alta defesa • Espólio: 🪙 8.200, ⚡ 6.500, 💎 50</p>
+            </div>
           </div>
-          <button class="rts-btn battle" onclick="executePvPBattle()">Invadir Vila</button>
+          <button class="gl-buy-btn" style="background: linear-gradient(135deg, #ef4444, #b91c1c);" onclick="launchRaid('Cinturão de Órion', 8200, 6500, 50)">Invadir</button>
         </div>
 
-        <div id="battle-live-log" style="background: #080b0f; padding: 10px; border-radius: 4px; font-size: 11px; font-family: monospace; display: none; border-left: 3px solid var(--rts-gold);">
-        </div>
+        <div id="raid-live-box" style="display: none; background: #080c14; padding: 12px; border-radius: 10px; border-left: 3px solid var(--gl-cyan); font-size: 11px; font-family: monospace;"></div>
       </div>
     </div>
   </div>
 
   <!-- MODAL ALIANÇA -->
-  <div class="rts-modal-overlay" id="modal-alliance">
-    <div class="rts-modal-box">
-      <div class="rts-modal-header">
-        <h2>🛡️ Legiões e Alianças Reais</h2>
-        <button class="rts-modal-close" onclick="closeModal('modal-alliance')">&times;</button>
+  <div class="gl-modal-backdrop" id="modal-alliance">
+    <div class="gl-modal-window">
+      <div class="gl-modal-header">
+        <h2>🛡️ Aliança Galáctica</h2>
+        <button class="gl-modal-close" onclick="closeModal('modal-alliance')">&times;</button>
       </div>
-      <div class="rts-modal-body">
-        <div style="background: rgba(255,255,255,0.04); padding: 12px; border-radius: 4px; border: 1px solid var(--rts-gold-dark);">
-          <h3 style="color: var(--rts-gold-bright); font-size: 14px; margin-bottom: 4px;">Guarda de Persépolis [PERS]</h3>
-          <p style="font-size: 11px; color: var(--text-muted); margin-bottom: 8px;">Líder: Grande Sátrapa Artaxerxes • 36 Membros • Ranking #12 Global</p>
-          <div style="display: flex; gap: 8px;">
-            <button class="rts-btn highlight" style="flex: 1;" onclick="donateAlliance()">Doar 5 Imortais (+50 XP)</button>
-            <button class="rts-btn" style="flex: 1;" onclick="showToast('💬 Bate-papo da Legião: Todos convocados para a guerra!')">Ver Chat</button>
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- MODAL LOJA -->
-  <div class="rts-modal-overlay" id="modal-store">
-    <div class="rts-modal-box">
-      <div class="rts-modal-header">
-        <h2>💎 Tesouro Imperial & Loja</h2>
-        <button class="rts-modal-close" onclick="closeModal('modal-store')">&times;</button>
-      </div>
-      <div class="rts-modal-body">
-        <div class="catalog-item-card">
-          <div>
-            <div class="item-info-title">Bolsa de 500 Gemas Imperiais</div>
-            <div class="item-info-desc">Dáricos preciosos para aceleração e prestígio.</div>
-            <div class="item-info-cost">R$ 14,90 (Receba 500 Gemas)</div>
-          </div>
-          <button class="rts-btn highlight" onclick="buyStore(500)">Comprar</button>
-        </div>
-
-        <div class="catalog-item-card">
-          <div>
-            <div class="item-info-title">Escudo Sagrado de Ahura Mazda (48h)</div>
-            <div class="item-info-desc">Proteção inviolável contra ataques de outras vilas.</div>
-            <div class="item-info-cost">R$ 19,90 (+48h Escudo)</div>
-          </div>
-          <button class="rts-btn highlight" onclick="buyStore(150)">Comprar</button>
+      <div class="gl-modal-content">
+        <div style="background: rgba(255,255,255,0.04); padding: 14px; border-radius: 12px; border: 1px solid var(--gl-border);">
+          <h3 style="color: var(--gl-gold); font-size: 14px; margin-bottom: 4px;">Guardiões da Galáxia [GLX]</h3>
+          <p style="font-size: 11px; color: #94a3b8; margin-bottom: 12px;">38 Membros Ativos • Nível 8 de Clã • Bônus de Defesa +15%</p>
+          <button class="gl-buy-btn" style="width: 100%;" onclick="showToast('🚀 5 Tropas doadas para reforço da Aliança!')">Doar Tropas de Reforço</button>
         </div>
       </div>
     </div>
@@ -735,182 +715,117 @@
 
 <script>
   // ============================================================
-  // MOTOR RTS ISOMÉTRICO 2.5D (HD OPEN SOURCE SPRITES)
+  // MOTOR DE JOGO ISOMÉTRICO 2.5D ESTILO GALAXY LIFE
   // ============================================================
-  const GRID_SIZE = 40;
+  const GRID_SIZE = 36;
   const TILE_W = 64;
   const TILE_H = 32;
 
-  // Catálogo de Sprites Pré-Renderizados (0 A.D., Genie Engine, Flare)
-  const SPRITES = {};
-  const SPRITE_URLS = {
-    // Edifícios
-    apadana: 'assets/sprites/persian_apadana.png',
-    barracks: 'assets/sprites/persian_barracks.png',
-    farm: 'assets/sprites/persian_farm.png',
-    sawmill: 'assets/sprites/persian_sawmill.png',
-    tower: 'assets/sprites/persian_tower.png',
-    house: 'assets/sprites/persian_house.png',
-    mine: 'assets/sprites/persian_mine.png',
-    // Cenário e Vegetação
-    cypress_tree: 'assets/sprites/cypress_tree.png',
-    normal_tree: 'assets/sprites/normal_tree.png',
-    gold_ore: 'assets/sprites/gold_ore.png',
-    stone_ore: 'assets/sprites/stone_ore.png',
-    // Terrenos Isométricos Texturizados
-    tile_sand: 'assets/sprites/tile_sand.png',
-    tile_water: 'assets/sprites/tile_water.png',
-    tile_road: 'assets/sprites/tile_road.png',
-    tile_fertile: 'assets/sprites/tile_fertile.png',
-    // Tropas Animadas em 3D
-    immortal_0: 'assets/sprites/immortal_walk_0.png',
-    immortal_1: 'assets/sprites/immortal_walk_1.png',
-    immortal_2: 'assets/sprites/immortal_walk_2.png',
-    immortal_3: 'assets/sprites/immortal_walk_3.png',
-    archer_0: 'assets/sprites/archer_walk_0.png',
-    archer_1: 'assets/sprites/archer_walk_1.png',
-    archer_2: 'assets/sprites/archer_walk_2.png',
-    archer_3: 'assets/sprites/archer_walk_3.png',
-    // Retratos Históricos 0 A.D.
-    portrait_persia: 'assets/sprites/portrait_persia.png',
-    portrait_apadana: 'assets/sprites/portrait_apadana.png',
-    portrait_barracks: 'assets/sprites/portrait_barracks.png',
-    portrait_immortal: 'assets/sprites/portrait_immortal.png',
-    portrait_archer: 'assets/sprites/portrait_archer.png',
-    portrait_farm: 'assets/sprites/portrait_farm.png'
+  // Carregador de Imagens Estilo Galaxy Life
+  const ASSETS = {};
+  const ASSET_PATHS = {
+    starbase: 'assets/sprites/galaxy_starbase.png',
+    extractor: 'assets/sprites/galaxy_extractor.png',
+    bank: 'assets/sprites/galaxy_bank.png',
+    barracks: 'assets/sprites/galaxy_barracks.png',
+    cannon: 'assets/sprites/galaxy_cannon.png',
+    tile_planet: 'assets/sprites/galaxy_tile_planet.png',
+    tile_road: 'assets/sprites/galaxy_tile_road.png',
+    tile_crater: 'assets/sprites/galaxy_tile_crater.png',
+    tile_water: 'assets/sprites/galaxy_tile_water.png',
+    starling_0: 'assets/sprites/galaxy_starling_0.png',
+    starling_1: 'assets/sprites/galaxy_starling_1.png',
+    starling_2: 'assets/sprites/galaxy_starling_2.png',
+    starling_3: 'assets/sprites/galaxy_starling_3.png',
+    soldier_0: 'assets/sprites/galaxy_soldier_0.png',
+    soldier_1: 'assets/sprites/galaxy_soldier_1.png',
+    soldier_2: 'assets/sprites/galaxy_soldier_2.png',
+    soldier_3: 'assets/sprites/galaxy_soldier_3.png',
+    bubble_gold: 'assets/sprites/galaxy_bubble_gold.png',
+    bubble_min: 'assets/sprites/galaxy_bubble_mineral.png'
   };
 
-  let spritesLoaded = 0;
-  for (const [key, url] of Object.entries(SPRITE_URLS)) {
+  let loadedCount = 0;
+  for (const [key, path] of Object.entries(ASSET_PATHS)) {
     const img = new Image();
-    img.src = url;
-    img.onload = () => { spritesLoaded++; };
-    SPRITES[key] = img;
+    img.src = path;
+    img.onload = () => { loadedCount++; };
+    ASSETS[key] = img;
   }
 
-  // Estado do Jogo
+  // Estado da Colônia
   const state = {
-    food: 1250,
-    wood: 1100,
-    stone: 850,
-    iron: 500,
-    gold: 920,
-    gems: 250,
-    immortals: 15,
-    archers: 20,
+    gold: 14850,
+    minerals: 12200,
+    chips: 350,
     terrain: [],
-    scenery: [],
     buildings: [
-      { id: 'bld_center', type: 'CENTRO_IMPERIAL', name: 'Apadana de Dario I', gridX: 18, gridY: 18, w: 4, h: 4, hp: 2800, maxHp: 2800, spriteKey: 'apadana', anchorX: 128, anchorY: 340, portrait: 'portrait_apadana' },
-      { id: 'bld_farm', type: 'FAZENDA', name: 'Fazenda Qanat', gridX: 13, gridY: 18, w: 3, h: 3, hp: 1200, maxHp: 1200, spriteKey: 'farm', anchorX: 64, anchorY: 180, portrait: 'portrait_farm' },
-      { id: 'bld_sawmill', type: 'SERRARIA', name: 'Serraria de Cedro', gridX: 24, gridY: 18, w: 3, h: 3, hp: 1400, maxHp: 1400, spriteKey: 'sawmill', anchorX: 96, anchorY: 180, portrait: 'portrait_farm' },
-      { id: 'bld_barracks', type: 'QUARTEL', name: 'Quartel dos Imortais', gridX: 18, gridY: 24, w: 3, h: 3, hp: 2100, maxHp: 2100, spriteKey: 'barracks', anchorX: 96, anchorY: 280, portrait: 'portrait_barracks' },
-      { id: 'bld_tower', type: 'TORRE_ARQUEIROS', name: 'Torre de Guarda de Susa', gridX: 18, gridY: 14, w: 2, h: 2, hp: 1600, maxHp: 1600, spriteKey: 'tower', anchorX: 32, anchorY: 90, portrait: 'portrait_archer' }
+      { id: 'bld_sb', type: 'STARBASE', name: 'Base Central Estelar', lvl: 3, gridX: 16, gridY: 16, w: 4, h: 4, hp: 3200, maxHp: 3200, spriteKey: 'starbase', anchorX: 128, anchorY: 210, readyHarvest: false },
+      { id: 'bld_ext1', type: 'EXTRACTOR', name: 'Extrator de Minerais', lvl: 4, gridX: 11, gridY: 16, w: 3, h: 3, hp: 1400, maxHp: 1400, spriteKey: 'extractor', anchorX: 96, anchorY: 155, readyHarvest: true, resType: 'mineral' },
+      { id: 'bld_ext2', type: 'EXTRACTOR', name: 'Extrator de Minerais', lvl: 3, gridX: 11, gridY: 21, w: 3, h: 3, hp: 1200, maxHp: 1200, spriteKey: 'extractor', anchorX: 96, anchorY: 155, readyHarvest: true, resType: 'mineral' },
+      { id: 'bld_bank', type: 'BANK', name: 'Banco Galáctico', lvl: 3, gridX: 22, gridY: 16, w: 3, h: 3, hp: 1800, maxHp: 1800, spriteKey: 'bank', anchorX: 96, anchorY: 155, readyHarvest: true, resType: 'gold' },
+      { id: 'bld_bar', type: 'BARRACKS', name: 'Quartel de Tropas', lvl: 2, gridX: 16, gridY: 22, w: 3, h: 3, hp: 2000, maxHp: 2000, spriteKey: 'barracks', anchorX: 96, anchorY: 155, readyHarvest: false },
+      { id: 'bld_can', type: 'CANNON', name: 'Torre de Canhão Plasma', lvl: 3, gridX: 16, gridY: 12, w: 2, h: 2, hp: 1500, maxHp: 1500, spriteKey: 'cannon', anchorX: 64, anchorY: 130, readyHarvest: false }
     ],
-    units: [
-      { id: 'u1', type: 'IMMORTAL', name: 'Imortal Aquemênida', gridX: 15, gridY: 20, startX: 8, endX: 32, dir: 1, speed: 0.035, hp: 320, maxHp: 320, attack: 28, armor: 18, portrait: 'portrait_immortal' },
-      { id: 'u2', type: 'IMMORTAL', name: 'Imortal Aquemênida', gridX: 22, gridY: 20, startX: 8, endX: 32, dir: 1, speed: 0.035, hp: 320, maxHp: 320, attack: 28, armor: 18, portrait: 'portrait_immortal' },
-      { id: 'u3', type: 'ARCHER', name: 'Arqueiro de Susa', gridX: 28, gridY: 20, startX: 12, endX: 34, dir: -1, speed: 0.04, hp: 180, maxHp: 180, attack: 22, armor: 8, portrait: 'portrait_archer' }
+    // Habitantes Starling que andam e saltam pela colônia
+    citizens: [
+      { id: 'c1', type: 'STARLING', gridX: 15, gridY: 18, targetX: 23, dir: 1, speed: 0.03 },
+      { id: 'c2', type: 'STARLING', gridX: 20, gridY: 18, targetX: 12, dir: -1, speed: 0.025 },
+      { id: 's1', type: 'SOLDIER', gridX: 16, gridY: 14, targetX: 16, dir: 1, speed: 0.02 }
     ],
-    selectedEntity: null,
+    selectedBuilding: null,
     hoveredGrid: { x: 18, y: 18 },
-    placementPreview: null,
+    placementMode: null,
     camera: {
       x: 0,
       y: 0,
       targetX: 0,
       targetY: 0,
-      zoom: 1.0,
-      targetZoom: 1.0,
+      zoom: 1.15,
+      targetZoom: 1.15,
       isDragging: false,
       lastX: 0,
-      lastY: 0,
-      velX: 0,
-      velY: 0
+      lastY: 0
     }
   };
 
-  function initWorld() {
+  function initTerrain() {
     state.terrain = [];
-    state.scenery = [];
-
     for (let x = 0; x < GRID_SIZE; x++) {
       state.terrain[x] = [];
       for (let y = 0; y < GRID_SIZE; y++) {
-        let type = 'SAND';
-        let walkable = true;
-
-        if (Math.hypot(x - 6, y - 6) <= 3.2) {
-          type = 'OASIS';
-          walkable = false;
-        } else if (Math.hypot(x - 33, y - 7) <= 2.2) {
-          type = 'ROCK';
-          walkable = false;
-        } else if (y === 20 && x >= 2 && x <= 38) {
-          type = 'ROAD';
-        } else if (x >= 12 && x <= 16 && y >= 17 && y <= 21) {
-          type = 'FERTILE';
-        }
-
-        state.terrain[x][y] = { type, walkable };
+        let type = 'PLANET';
+        // Estrada de conduíte cruzando o centro
+        if (y === 18 && x >= 4 && x <= 32) type = 'ROAD';
+        // Cratera mineral
+        else if (Math.hypot(x - 8, y - 8) <= 2.5) type = 'CRATER';
+        // Lago de plasma
+        else if (Math.hypot(x - 28, y - 8) <= 2.8) type = 'WATER';
+        state.terrain[x][y] = { type };
       }
     }
-
-    // Vegetação natural ao redor do oásis
-    const treeCoords = [
-      { x: 3, y: 5, t: 'cypress_tree', ax: 12, ay: 50 },
-      { x: 9, y: 4, t: 'normal_tree', ax: 14, ay: 48 },
-      { x: 7, y: 10, t: 'cypress_tree', ax: 12, ay: 50 },
-      { x: 4, y: 8, t: 'normal_tree', ax: 14, ay: 48 },
-      { x: 10, y: 8, t: 'cypress_tree', ax: 12, ay: 50 },
-      { x: 15, y: 22, t: 'normal_tree', ax: 14, ay: 48 },
-      { x: 26, y: 16, t: 'cypress_tree', ax: 12, ay: 50 },
-      { x: 30, y: 22, t: 'normal_tree', ax: 14, ay: 48 }
-    ];
-    for (const c of treeCoords) {
-      state.scenery.push({ type: 'TREE', gridX: c.x, gridY: c.y, spriteKey: c.t, anchorX: c.ax, anchorY: c.ay });
-    }
-
-    // Depósitos de Ouro e Pedra na área rochosa
-    const oreCoords = [
-      { x: 32, y: 7, t: 'stone_ore', ax: 32, ay: 34 },
-      { x: 34, y: 6, t: 'gold_ore', ax: 32, ay: 34 },
-      { x: 33, y: 9, t: 'stone_ore', ax: 32, ay: 34 },
-      { x: 35, y: 8, t: 'gold_ore', ax: 32, ay: 34 }
-    ];
-    for (const c of oreCoords) {
-      state.scenery.push({ type: 'ORE', gridX: c.x, gridY: c.y, spriteKey: c.t, anchorX: c.ax, anchorY: c.ay });
-    }
-
-    state.selectedEntity = state.buildings[0];
   }
-  initWorld();
+  initTerrain();
 
   const canvas = document.getElementById('isometric-canvas');
   const ctx = canvas.getContext('2d');
-  const minimapCanvas = document.getElementById('minimap-canvas');
-  const miniCtx = minimapCanvas.getContext('2d');
 
   function resizeCanvas() {
     canvas.width = window.innerWidth;
     canvas.height = window.innerHeight;
     if (state.camera.x === 0 && state.camera.y === 0) {
-      centerCameraOnCenter();
+      centerCamera();
     }
   }
   window.addEventListener('resize', resizeCanvas);
   resizeCanvas();
 
-  function centerCameraOnCenter() {
+  function centerCamera() {
     state.camera.targetX = canvas.width / 2;
-    state.camera.targetY = canvas.height / 2 - 80;
+    state.camera.targetY = canvas.height / 2 - 40;
     state.camera.x = state.camera.targetX;
     state.camera.y = state.camera.targetY;
-    state.camera.targetZoom = 1.0;
-  }
-
-  function adjustZoom(factor) {
-    state.camera.targetZoom = Math.max(0.6, Math.min(2.2, state.camera.targetZoom * factor));
+    state.camera.targetZoom = 1.15;
   }
 
   function gridToScreen(gx, gy) {
@@ -929,30 +844,18 @@
     return { x: gx, y: gy };
   }
 
-  function canPlaceBuildingAt(gx, gy, w, h) {
-    if (gx < 0 || gy < 0 || gx + w > GRID_SIZE || gy + h > GRID_SIZE) return false;
-    for (let x = gx; x < gx + w; x++) {
-      for (let y = gy; y < gy + h; y++) {
-        if (!state.terrain[x][y].walkable && state.terrain[x][y].type !== 'ROAD') return false;
-      }
-    }
-    for (const bld of state.buildings) {
-      if (gx < bld.gridX + bld.w && gx + w > bld.gridX && gy < bld.gridY + bld.h && gy + h > bld.gridY) {
-        return false;
-      }
-    }
-    return true;
-  }
-
-  // LOOP DE RENDERIZAÇÃO
-  let globalTick = 0;
+  // ============================================================
+  // LOOP PRINCIPAL DE RENDERIZAÇÃO
+  // ============================================================
+  let tick = 0;
 
   function render() {
-    globalTick++;
+    tick++;
 
-    state.camera.x += (state.camera.targetX - state.camera.x) * 0.25;
-    state.camera.y += (state.camera.targetY - state.camera.y) * 0.25;
-    state.camera.zoom += (state.camera.targetZoom - state.camera.zoom) * 0.2;
+    // Suavização da Câmera
+    state.camera.x += (state.camera.targetX - state.camera.x) * 0.2;
+    state.camera.y += (state.camera.targetY - state.camera.y) * 0.2;
+    state.camera.zoom += (state.camera.targetZoom - state.camera.zoom) * 0.15;
 
     const z = state.camera.zoom;
     const halfW = (TILE_W / 2) * z;
@@ -960,38 +863,56 @@
 
     ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-    ctx.fillStyle = '#080c10';
+    // 1. FUNDO CÓSMICO COM ESTRELAS
+    ctx.save();
+    ctx.fillStyle = '#0a0d18';
     ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-    // 1. TERRENO TEXTURIZADO ISOMÉTRICO
+    // Estrelas cintilantes no espaço
+    for (let i = 0; i < 45; i++) {
+      const sx = ((i * 137 + tick * 0.2) % canvas.width);
+      const sy = ((i * 269) % canvas.height);
+      const sr = (i % 3 === 0) ? 2 : 1;
+      const alpha = 0.4 + Math.sin(tick * 0.05 + i) * 0.3;
+      ctx.fillStyle = `rgba(255, 255, 255, ${alpha})`;
+      ctx.fillRect(sx, sy, sr, sr);
+    }
+    ctx.restore();
+
+    // 2. DISCO PLANETÁRIO / ASTEROIDE (A base flutuante de Galaxy Life)
+    const centerScreen = gridToScreen(GRID_SIZE / 2, GRID_SIZE / 2);
+    ctx.save();
+    ctx.beginPath();
+    ctx.ellipse(centerScreen.x, centerScreen.y, (GRID_SIZE * TILE_W * 0.5) * z, (GRID_SIZE * TILE_H * 0.5) * z, 0, 0, Math.PI * 2);
+    ctx.fillStyle = '#1e293b';
+    ctx.fill();
+    ctx.lineWidth = 6 * z;
+    ctx.strokeStyle = '#00e5ff33';
+    ctx.stroke();
+    ctx.restore();
+
+    // 3. TERRENO ISOMÉTRICO PLANETÁRIO
     for (let gx = 0; gx < GRID_SIZE; gx++) {
       for (let gy = 0; gy < GRID_SIZE; gy++) {
-        const pos = gridToScreen(gx, gy);
+        // Círculo de corte do asteroide
+        if (Math.hypot(gx - GRID_SIZE / 2, gy - GRID_SIZE / 2) > (GRID_SIZE / 2) - 1) continue;
 
-        if (pos.x < -100 || pos.x > canvas.width + 100 || pos.y < -100 || pos.y > canvas.height + 100) continue;
+        const pos = gridToScreen(gx, gy);
+        if (pos.x < -80 || pos.x > canvas.width + 80 || pos.y < -80 || pos.y > canvas.height + 80) continue;
 
         const cell = state.terrain[gx][gy];
-        let tileSprite = SPRITES.tile_sand;
-        if (cell.type === 'OASIS') tileSprite = SPRITES.tile_water;
-        else if (cell.type === 'ROAD') tileSprite = SPRITES.tile_road;
-        else if (cell.type === 'FERTILE') tileSprite = SPRITES.tile_fertile;
+        let tileImg = ASSETS.tile_planet;
+        if (cell.type === 'ROAD') tileImg = ASSETS.tile_road;
+        else if (cell.type === 'CRATER') tileImg = ASSETS.tile_crater;
+        else if (cell.type === 'WATER') tileImg = ASSETS.tile_water;
 
-        if (tileSprite && tileSprite.complete && tileSprite.naturalWidth > 0) {
-          ctx.drawImage(tileSprite, pos.x - halfW, pos.y, TILE_W * z, TILE_H * z);
-        } else {
-          ctx.beginPath();
-          ctx.moveTo(pos.x, pos.y);
-          ctx.lineTo(pos.x + halfW, pos.y + halfH);
-          ctx.lineTo(pos.x, pos.y + halfH * 2);
-          ctx.lineTo(pos.x - halfW, pos.y + halfH);
-          ctx.closePath();
-          ctx.fillStyle = cell.type === 'OASIS' ? '#1f648d' : (cell.type === 'ROAD' ? '#8a7d6e' : '#bfa378');
-          ctx.fill();
+        if (tileImg && tileImg.complete && tileImg.naturalWidth > 0) {
+          ctx.drawImage(tileImg, pos.x - halfW, pos.y, TILE_W * z, TILE_H * z);
         }
       }
     }
 
-    // 2. CURSOR HOVER
+    // 4. CURSOR HOVER
     const hPos = gridToScreen(state.hoveredGrid.x, state.hoveredGrid.y);
     if (state.hoveredGrid.x >= 0 && state.hoveredGrid.x < GRID_SIZE && state.hoveredGrid.y >= 0 && state.hoveredGrid.y < GRID_SIZE) {
       ctx.beginPath();
@@ -1000,259 +921,146 @@
       ctx.lineTo(hPos.x, hPos.y + halfH * 2);
       ctx.lineTo(hPos.x - halfW, hPos.y + halfH);
       ctx.closePath();
-      ctx.strokeStyle = 'rgba(229, 179, 56, 0.85)';
+      ctx.strokeStyle = '#00e5ff';
       ctx.lineWidth = 2;
       ctx.stroke();
     }
 
-    // 3. PRÉ-VISUALIZAÇÃO DE CONSTRUÇÃO
-    if (state.placementPreview) {
-      const p = state.placementPreview;
+    // 5. MODO DE CONSTRUÇÃO (PREVIEW)
+    if (state.placementMode) {
+      const p = state.placementMode;
       const gx = state.hoveredGrid.x;
       const gy = state.hoveredGrid.y;
-      const isValid = canPlaceBuildingAt(gx, gy, p.w, p.h);
-
       for (let x = 0; x < p.w; x++) {
         for (let y = 0; y < p.h; y++) {
-          const tilePos = gridToScreen(gx + x, gy + y);
+          const tPos = gridToScreen(gx + x, gy + y);
           ctx.beginPath();
-          ctx.moveTo(tilePos.x, tilePos.y);
-          ctx.lineTo(tilePos.x + halfW, tilePos.y + halfH);
-          ctx.lineTo(tilePos.x, tilePos.y + halfH * 2);
-          ctx.lineTo(tilePos.x - halfW, tilePos.y + halfH);
+          ctx.moveTo(tPos.x, tPos.y);
+          ctx.lineTo(tPos.x + halfW, tPos.y + halfH);
+          ctx.lineTo(tPos.x, tPos.y + halfH * 2);
+          ctx.lineTo(tPos.x - halfW, tPos.y + halfH);
           ctx.closePath();
-          ctx.fillStyle = isValid ? 'rgba(34, 197, 94, 0.45)' : 'rgba(239, 68, 68, 0.45)';
+          ctx.fillStyle = 'rgba(34, 197, 94, 0.5)';
           ctx.fill();
-          ctx.strokeStyle = isValid ? '#22c55e' : '#ef4444';
-          ctx.lineWidth = 1.5;
+          ctx.strokeStyle = '#22c55e';
+          ctx.lineWidth = 2;
           ctx.stroke();
         }
       }
     }
 
-    // 4. ENTIDADES COM Y-SORTING
-    const renderQueue = [];
-
-    for (const sc of state.scenery) {
-      renderQueue.push({ type: 'SCENERY', depth: sc.gridX + sc.gridY, obj: sc });
-    }
+    // 6. ENTIDADES COM Y-SORTING (Edifícios e Starlings)
+    const renderList = [];
 
     for (const bld of state.buildings) {
-      renderQueue.push({ type: 'BUILDING', depth: (bld.gridX + bld.w - 1) + (bld.gridY + bld.h - 1), obj: bld });
+      renderList.push({ type: 'BUILDING', depth: (bld.gridX + bld.w - 1) + (bld.gridY + bld.h - 1), obj: bld });
     }
 
-    for (const u of state.units) {
-      u.gridX += u.dir * u.speed;
-      if (u.gridX > u.endX) { u.gridX = u.endX; u.dir = -1; }
-      if (u.gridX < u.startX) { u.gridX = u.startX; u.dir = 1; }
-      renderQueue.push({ type: 'UNIT', depth: u.gridX + u.gridY, obj: u });
+    for (const c of state.citizens) {
+      c.gridX += c.dir * c.speed;
+      if (c.gridX > 25) { c.gridX = 25; c.dir = -1; }
+      if (c.gridX < 10) { c.gridX = 10; c.dir = 1; }
+      renderList.push({ type: 'CITIZEN', depth: c.gridX + c.gridY, obj: c });
     }
 
-    renderQueue.sort((a, b) => a.depth - b.depth);
+    renderList.sort((a, b) => a.depth - b.depth);
 
-    for (const item of renderQueue) {
-      if (item.type === 'SCENERY') renderScenery(item.obj, z);
-      else if (item.type === 'BUILDING') renderBuilding(item.obj, z);
-      else if (item.type === 'UNIT') renderUnit(item.obj, z);
+    for (const item of renderList) {
+      if (item.type === 'BUILDING') renderBuilding(item.obj, z);
+      else if (item.type === 'CITIZEN') renderCitizen(item.obj, z);
     }
 
-    renderMinimap();
     requestAnimationFrame(render);
   }
 
-  function renderScenery(sc, z) {
-    const pos = gridToScreen(sc.gridX, sc.gridY);
-    const sprite = SPRITES[sc.spriteKey];
-    if (sprite && sprite.complete && sprite.naturalWidth > 0) {
-      const sw = sprite.naturalWidth * z;
-      const sh = sprite.naturalHeight * z;
-      ctx.drawImage(sprite, pos.x - (sc.anchorX * z), pos.y - (sc.anchorY * z) + (TILE_H * z / 2), sw, sh);
-    }
-  }
-
+  // Renderiza Edifício Cartoon Galaxy Life
   function renderBuilding(bld, z) {
     const footCenterX = bld.gridX + bld.w / 2;
     const footCenterY = bld.gridY + bld.h / 2;
     const pos = gridToScreen(footCenterX, footCenterY);
 
-    const isSelected = state.selectedEntity && state.selectedEntity.id === bld.id;
+    const isSelected = state.selectedBuilding && state.selectedBuilding.id === bld.id;
 
+    // Anel de Seleção Neon
     if (isSelected) {
       ctx.save();
       ctx.beginPath();
       const rw = (bld.w * TILE_W * 0.45) * z;
       const rh = (bld.h * TILE_H * 0.45) * z;
       ctx.ellipse(pos.x, pos.y, rw, rh, 0, 0, Math.PI * 2);
-      ctx.strokeStyle = '#22c55e';
-      ctx.lineWidth = 2.5;
+      ctx.strokeStyle = '#00e5ff';
+      ctx.lineWidth = 3;
+      ctx.shadowColor = '#00e5ff';
+      ctx.shadowBlur = 12;
       ctx.stroke();
       ctx.restore();
     }
 
-    const sprite = SPRITES[bld.spriteKey];
+    const sprite = ASSETS[bld.spriteKey];
     if (sprite && sprite.complete && sprite.naturalWidth > 0) {
       const sw = sprite.naturalWidth * z;
       const sh = sprite.naturalHeight * z;
       const drawX = pos.x - (bld.anchorX * z);
       const drawY = pos.y - (bld.anchorY * z);
+
       ctx.drawImage(sprite, drawX, drawY, sw, sh);
 
-      if (isSelected) {
-        ctx.fillStyle = 'rgba(0, 0, 0, 0.75)';
-        ctx.fillRect(pos.x - 40 * z, drawY - 14 * z, 80 * z, 10 * z);
-        ctx.fillStyle = '#22c55e';
-        const hpPercent = bld.hp / bld.maxHp;
-        ctx.fillRect(pos.x - 39 * z, drawY - 13 * z, 78 * z * hpPercent, 8 * z);
+      // BOLHA FLUTUANTE DE COLETA (Ícone 3D Saltando)
+      if (bld.readyHarvest) {
+        const bounce = Math.sin(tick * 0.08) * 8;
+        const bubbleImg = (bld.resType === 'gold') ? ASSETS.bubble_gold : ASSETS.bubble_min;
+        if (bubbleImg && bubbleImg.complete) {
+          const bw = 46 * z;
+          const bh = 46 * z;
+          const bx = pos.x - bw / 2;
+          const by = drawY - 20 * z + bounce;
+          ctx.drawImage(bubbleImg, bx, by, bw, bh);
+        }
       }
+
+      // Nível do Edifício (Badge Galaxy Life)
+      ctx.save();
+      ctx.fillStyle = '#0f172a';
+      ctx.strokeStyle = '#f59e0b';
+      ctx.lineWidth = 1.5;
+      const badgeY = drawY + 10 * z;
+      ctx.beginPath();
+      ctx.arc(pos.x, badgeY, 11 * z, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.stroke();
+      ctx.fillStyle = '#fff';
+      ctx.font = `bold ${Math.max(9, Math.floor(10 * z))}px sans-serif`;
+      ctx.textAlign = 'center';
+      ctx.fillText(`Nv${bld.lvl}`, pos.x, badgeY + 4 * z);
+      ctx.restore();
     }
   }
 
-  function renderUnit(u, z) {
-    const pos = gridToScreen(u.gridX, u.gridY);
-    const isSelected = state.selectedEntity && state.selectedEntity.id === u.id;
-
-    ctx.save();
-    ctx.beginPath();
-    ctx.ellipse(pos.x, pos.y + 6 * z, 14 * z, 6 * z, 0, 0, Math.PI * 2);
-    ctx.fillStyle = 'rgba(12, 10, 8, 0.55)';
-    ctx.fill();
-
-    if (isSelected) {
-      ctx.beginPath();
-      ctx.ellipse(pos.x, pos.y + 6 * z, 18 * z, 8 * z, 0, 0, Math.PI * 2);
-      ctx.strokeStyle = '#22c55e';
-      ctx.lineWidth = 2;
-      ctx.stroke();
-    }
-
-    let sprite;
-    const frameIndex = Math.floor(globalTick / 9) % 4;
-    if (u.type === 'IMMORTAL') {
-      sprite = SPRITES[`immortal_${frameIndex}`];
-    } else {
-      sprite = SPRITES[`archer_${frameIndex}`];
-    }
+  // Renderiza Starling Animado
+  function renderCitizen(c, z) {
+    const pos = gridToScreen(c.gridX, c.gridY);
+    const frame = Math.floor(tick / 8) % 4;
+    const prefix = (c.type === 'STARLING') ? 'starling' : 'soldier';
+    const sprite = ASSETS[`${prefix}_${frame}`];
 
     if (sprite && sprite.complete && sprite.naturalWidth > 0) {
       const sw = sprite.naturalWidth * z;
       const sh = sprite.naturalHeight * z;
       ctx.save();
-      if (u.dir < 0) {
+      if (c.dir < 0) {
         ctx.translate(pos.x, pos.y);
         ctx.scale(-1, 1);
-        ctx.drawImage(sprite, -32 * z, -76 * z, sw, sh);
+        ctx.drawImage(sprite, -40 * z, -66 * z, sw, sh);
       } else {
-        ctx.drawImage(sprite, pos.x - 32 * z, pos.y - 76 * z, sw, sh);
+        ctx.drawImage(sprite, pos.x - 40 * z, pos.y - 66 * z, sw, sh);
       }
       ctx.restore();
-
-      if (isSelected) {
-        ctx.fillStyle = 'rgba(0, 0, 0, 0.85)';
-        ctx.fillRect(pos.x - 18 * z, pos.y - 84 * z, 36 * z, 6 * z);
-        ctx.fillStyle = '#22c55e';
-        ctx.fillRect(pos.x - 17 * z, pos.y - 83 * z, 34 * z * (u.hp / u.maxHp), 4 * z);
-      }
-    }
-    ctx.restore();
-  }
-
-  // RADAR MINIMAP
-  function renderMinimap() {
-    const mw = minimapCanvas.width;
-    const mh = minimapCanvas.height;
-
-    miniCtx.fillStyle = '#0f141b';
-    miniCtx.fillRect(0, 0, mw, mh);
-
-    const cellW = mw / GRID_SIZE;
-    const cellH = mh / GRID_SIZE;
-
-    for (let x = 0; x < GRID_SIZE; x += 2) {
-      for (let y = 0; y < GRID_SIZE; y += 2) {
-        const cell = state.terrain[x][y];
-        if (cell.type === 'OASIS') {
-          miniCtx.fillStyle = '#2563eb';
-          miniCtx.fillRect(x * cellW, y * cellH, cellW * 2, cellH * 2);
-        } else if (cell.type === 'ROAD') {
-          miniCtx.fillStyle = '#78716c';
-          miniCtx.fillRect(x * cellW, y * cellH, cellW * 2, cellH * 2);
-        }
-      }
-    }
-
-    miniCtx.fillStyle = '#16a34a';
-    for (const bld of state.buildings) {
-      miniCtx.fillRect(bld.gridX * cellW, bld.gridY * cellH, bld.w * cellW, bld.h * cellH);
-    }
-
-    miniCtx.fillStyle = '#fde047';
-    for (const u of state.units) {
-      miniCtx.fillRect(u.gridX * cellW - 1, u.gridY * cellH - 1, 3, 3);
-    }
-
-    const centerGrid = screenToGrid(canvas.width / 2, canvas.height / 2);
-    miniCtx.strokeStyle = '#ffffff';
-    miniCtx.lineWidth = 1.5;
-    const viewW = (canvas.width / (TILE_W * state.camera.zoom)) * cellW * 2;
-    const viewH = (canvas.height / (TILE_H * state.camera.zoom)) * cellH * 2;
-    miniCtx.strokeRect(centerGrid.x * cellW - viewW / 2, centerGrid.y * cellH - viewH / 2, viewW, viewH);
-  }
-
-  minimapCanvas.addEventListener('click', (e) => {
-    const rect = minimapCanvas.getBoundingClientRect();
-    const clickX = e.clientX - rect.left;
-    const clickY = e.clientY - rect.top;
-    const targetGridX = (clickX / minimapCanvas.width) * GRID_SIZE;
-    const targetGridY = (clickY / minimapCanvas.height) * GRID_SIZE;
-
-    const pos = gridToScreen(targetGridX, targetGridY);
-    state.camera.targetX += (canvas.width / 2) - pos.x;
-    state.camera.targetY += (canvas.height / 2) - pos.y;
-  });
-
-  // SELEÇÃO & CONTROLES
-  function selectEntity(entity) {
-    state.selectedEntity = entity;
-    updateSelectionCard();
-  }
-
-  function updateSelectionCard() {
-    if (!state.selectedEntity) return;
-
-    const e = state.selectedEntity;
-    const titleEl = document.getElementById('sel-title');
-    const typeEl = document.getElementById('sel-type');
-    const hpBarEl = document.getElementById('sel-hp-bar');
-    const hpTextEl = document.getElementById('sel-hp-text');
-    const statsEl = document.getElementById('sel-stats');
-    const portraitEl = document.getElementById('sel-portrait');
-
-    titleEl.textContent = e.name;
-    const hpPercent = Math.max(0, Math.min(100, (e.hp / e.maxHp) * 100));
-    hpBarEl.style.width = `${hpPercent}%`;
-    hpTextEl.textContent = `${e.hp} / ${e.maxHp} HP`;
-
-    if (e.portrait && SPRITES[e.portrait]) {
-      portraitEl.src = SPRITES[e.portrait].src;
-    }
-
-    if (e.attack) {
-      typeEl.textContent = `${e.name} • Infantaria Imperial Persa`;
-      statsEl.innerHTML = `
-        <div class="stat-chip">⚔️ Dano: <b>${e.attack}</b></div>
-        <div class="stat-chip">🛡️ Defesa: <b>${e.armor}</b></div>
-        <div class="stat-chip">🏃 Velocidade: <b>${(e.speed * 40).toFixed(1)}</b></div>
-      `;
-    } else {
-      typeEl.textContent = `Edifício Aquemênida • Nível 3`;
-      statsEl.innerHTML = `
-        <div class="stat-chip">🛡️ Resistência: <b>35</b></div>
-        <div class="stat-chip">📐 Dimensões: <b>${e.w}x${e.h}</b></div>
-        <div class="stat-chip">⭐ Estado: <b>Operacional</b></div>
-      `;
     }
   }
 
+  // ============================================================
+  // INTERAÇÕES, COLETA E TOQUE
+  // ============================================================
   canvas.addEventListener('mousedown', (e) => {
     state.camera.isDragging = true;
     state.camera.lastX = e.clientX;
@@ -1262,12 +1070,6 @@
   window.addEventListener('mousemove', (e) => {
     const mouseGrid = screenToGrid(e.clientX, e.clientY);
     state.hoveredGrid = mouseGrid;
-
-    const cell = (mouseGrid.x >= 0 && mouseGrid.x < GRID_SIZE && mouseGrid.y >= 0 && mouseGrid.y < GRID_SIZE)
-      ? state.terrain[mouseGrid.x][mouseGrid.y].type
-      : 'Fora do Mapa';
-    document.getElementById('hud-coords').textContent =
-      `Grade: (${mouseGrid.x}, ${mouseGrid.y}) | Terreno: ${cell} | Zoom: ${state.camera.zoom.toFixed(1)}x`;
 
     if (!state.camera.isDragging) return;
     const dx = e.clientX - state.camera.lastX;
@@ -1280,65 +1082,55 @@
 
   window.addEventListener('mouseup', () => { state.camera.isDragging = false; });
 
+  // Clique no Canvas (Coleta de Recursos ou Seleção de Edifício)
   canvas.addEventListener('click', (e) => {
     const clickGrid = screenToGrid(e.clientX, e.clientY);
 
-    if (state.placementPreview) {
-      const p = state.placementPreview;
-      if (canPlaceBuildingAt(clickGrid.x, clickGrid.y, p.w, p.h)) {
-        if (state.wood < p.woodCost || state.stone < p.stoneCost) {
-          showToast('⚠️ Recursos de Madeira ou Pedra insuficientes!');
-          return;
-        }
-
-        state.wood -= p.woodCost;
-        state.stone -= p.stoneCost;
-
-        let spriteKey = 'farm';
-        let anchorX = 64;
-        let anchorY = 180;
-        let portrait = 'portrait_farm';
-        if (p.type === 'QUARTEL') { spriteKey = 'barracks'; anchorX = 96; anchorY = 280; portrait = 'portrait_barracks'; }
-        else if (p.type === 'TORRE_ARQUEIROS') { spriteKey = 'tower'; anchorX = 32; anchorY = 90; portrait = 'portrait_archer'; }
-        else if (p.type === 'SERRARIA') { spriteKey = 'sawmill'; anchorX = 96; anchorY = 180; portrait = 'portrait_farm'; }
-        else if (p.type === 'MINA') { spriteKey = 'mine'; anchorX = 96; anchorY = 180; portrait = 'portrait_farm'; }
-
-        const newBld = {
-          id: `bld_${Date.now()}`,
-          type: p.type,
-          name: p.type.replace('_', ' '),
-          gridX: clickGrid.x,
-          gridY: clickGrid.y,
-          w: p.w,
-          h: p.h,
-          hp: 1500,
-          maxHp: 1500,
-          spriteKey,
-          anchorX,
-          anchorY,
-          portrait
-        };
-
-        state.buildings.push(newBld);
-        selectEntity(newBld);
-        playAudioFanfare();
-        showToast(`🏛️ ${newBld.name} erguido com sucesso na vila!`);
-        cancelBuildingPlacement();
-        updateHud();
-      } else {
-        showToast('❌ Posição bloqueada por água, rocha ou outro edifício.');
+    // Se estiver posicionando obra
+    if (state.placementMode) {
+      const p = state.placementMode;
+      if (state.gold < p.goldCost || state.minerals < p.minCost) {
+        showToast('⚠️ Moedas ou Minerais insuficientes!');
+        return;
       }
+
+      state.gold -= p.goldCost;
+      state.minerals -= p.minCost;
+
+      let spriteKey = 'extractor';
+      let anchorX = 96;
+      let anchorY = 155;
+      if (p.type === 'BANK') { spriteKey = 'bank'; }
+      else if (p.type === 'BARRACKS') { spriteKey = 'barracks'; }
+      else if (p.type === 'CANNON') { spriteKey = 'cannon'; anchorX = 64; anchorY = 130; }
+
+      const newBld = {
+        id: `bld_${Date.now()}`,
+        type: p.type,
+        name: p.type === 'EXTRACTOR' ? 'Extrator de Minerais' : (p.type === 'BANK' ? 'Banco Galáctico' : (p.type === 'BARRACKS' ? 'Quartel' : 'Canhão Plasma')),
+        lvl: 1,
+        gridX: clickGrid.x,
+        gridY: clickGrid.y,
+        w: p.w,
+        h: p.h,
+        hp: 1200,
+        maxHp: 1200,
+        spriteKey,
+        anchorX,
+        anchorY,
+        readyHarvest: false
+      };
+
+      state.buildings.push(newBld);
+      state.placementMode = null;
+      playPopSound(580);
+      spawnFloatNumber(e.clientX, e.clientY, 'Obra Erguida!');
+      showToast(`🚀 ${newBld.name} instalado na colônia!`);
+      updateHud();
       return;
     }
 
-    for (const u of state.units) {
-      if (Math.hypot(clickGrid.x - u.gridX, clickGrid.y - u.gridY) < 1.4) {
-        selectEntity(u);
-        playAudioTone(520, 0.15);
-        return;
-      }
-    }
-
+    // Verifica clique em edifícios
     for (const bld of state.buildings) {
       if (
         clickGrid.x >= bld.gridX &&
@@ -1346,19 +1138,42 @@
         clickGrid.y >= bld.gridY &&
         clickGrid.y < bld.gridY + bld.h
       ) {
-        selectEntity(bld);
-        playAudioTone(440, 0.15);
+        // Se a bolha de coleta estava ativa, colhe!
+        if (bld.readyHarvest) {
+          bld.readyHarvest = false;
+          playHarvestChime();
+          if (bld.resType === 'gold') {
+            state.gold += 350;
+            spawnFloatNumber(e.clientX, e.clientY, '+350 🪙');
+          } else {
+            state.minerals += 300;
+            spawnFloatNumber(e.clientX, e.clientY, '+300 ⚡');
+          }
+          updateHud();
+          return;
+        }
+
+        // Seleciona o edifício e abre card de contexto
+        state.selectedBuilding = bld;
+        openBuildingCard(bld);
+        playPopSound(440);
         return;
       }
     }
+
+    // Clicou fora: fecha o card
+    state.selectedBuilding = null;
+    document.getElementById('gl-building-card').style.display = 'none';
   });
 
+  // Zoom do Mouse Wheel
   canvas.addEventListener('wheel', (e) => {
     e.preventDefault();
     const factor = e.deltaY < 0 ? 1.12 : 0.88;
-    adjustZoom(factor);
+    state.camera.targetZoom = Math.max(0.7, Math.min(2.0, state.camera.targetZoom * factor));
   }, { passive: false });
 
+  // Mobile Touch Pan & Pinch Zoom
   let touchDist = 0;
   canvas.addEventListener('touchstart', (e) => {
     if (e.touches.length === 1) {
@@ -1386,203 +1201,147 @@
         e.touches[0].clientX - e.touches[1].clientX,
         e.touches[0].clientY - e.touches[1].clientY
       );
-      adjustZoom(dist / touchDist);
+      state.camera.targetZoom = Math.max(0.7, Math.min(2.0, state.camera.targetZoom * (dist / touchDist)));
       touchDist = dist;
     }
   });
 
   canvas.addEventListener('touchend', () => { state.camera.isDragging = false; });
 
-  function startBuildingPlacement(type, w, h, woodCost, stoneCost) {
-    state.placementPreview = { type, w, h, woodCost, stoneCost };
-    closeModal('modal-build');
-    const btn = document.getElementById('btn-build');
-    btn.innerHTML = '<span>❌</span> Cancelar';
-    btn.onclick = cancelBuildingPlacement;
-    showToast('Toque no terreno para erguer o edifício.');
+  // ============================================================
+  // FUNÇÕES DE UI E MECÂNICAS GALAXY LIFE
+  // ============================================================
+  function openBuildingCard(bld) {
+    const card = document.getElementById('gl-building-card');
+    document.getElementById('card-bld-title').textContent = bld.name;
+    document.getElementById('card-bld-desc').textContent = `Nível ${bld.lvl} • ${bld.hp}/${bld.maxHp} HP`;
+    document.getElementById('card-bld-img').src = ASSET_PATHS[bld.spriteKey];
+    card.style.display = 'flex';
   }
 
-  function cancelBuildingPlacement() {
-    state.placementPreview = null;
-    const btn = document.getElementById('btn-build');
-    btn.innerHTML = '<span>🔨</span> Obras';
-    btn.onclick = openBuildModal;
+  function upgradeSelectedBuilding() {
+    if (!state.selectedBuilding) return;
+    const bld = state.selectedBuilding;
+    const cost = bld.lvl * 800;
+
+    if (state.gold < cost) {
+      showToast(`⚠️ Moedas insuficientes para melhorar (Requer ${cost} 🪙)`);
+      return;
+    }
+
+    state.gold -= cost;
+    bld.lvl += 1;
+    bld.maxHp += 400;
+    bld.hp = bld.maxHp;
+
+    playHarvestChime();
+    showToast(`⭐ ${bld.name} evoluiu para o Nível ${bld.lvl}!`);
+    document.getElementById('card-bld-desc').textContent = `Nível ${bld.lvl} • ${bld.hp}/${bld.maxHp} HP`;
+    updateHud();
   }
 
-  function openBuildModal() { document.getElementById('modal-build').style.display = 'flex'; }
-  function openTrainModal() { document.getElementById('modal-train').style.display = 'flex'; }
-  function openBattleModal() { document.getElementById('modal-battle').style.display = 'flex'; }
+  function showBuildingInfo() {
+    if (!state.selectedBuilding) return;
+    showToast(`ℹ️ ${state.selectedBuilding.name} operacional com 100% de eficiência!`);
+  }
+
+  // Gera bolhas de coleta automaticamente a cada 8 segundos
+  setInterval(() => {
+    for (const b of state.buildings) {
+      if (b.type === 'EXTRACTOR' || b.type === 'BANK') {
+        b.readyHarvest = true;
+      }
+    }
+  }, 8000);
+
+  function startPlacement(type, w, h, goldCost, minCost) {
+    closeModal('modal-shop');
+    state.placementMode = { type, w, h, goldCost, minCost };
+    showToast('Toque no terreno do planeta para confirmar a instalação.');
+  }
+
+  function openShopModal() { document.getElementById('modal-shop').style.display = 'flex'; }
+  function openAttackModal() { document.getElementById('modal-attack').style.display = 'flex'; }
   function openAllianceModal() { document.getElementById('modal-alliance').style.display = 'flex'; }
-  function openStoreModal() { document.getElementById('modal-store').style.display = 'flex'; }
   function closeModal(id) { document.getElementById(id).style.display = 'none'; }
 
   function showToast(msg) {
-    const toast = document.getElementById('toast-banner');
+    const toast = document.getElementById('gl-toast');
     toast.textContent = msg;
     toast.style.display = 'block';
     setTimeout(() => { toast.style.display = 'none'; }, 3500);
   }
 
+  function spawnFloatNumber(x, y, text) {
+    const el = document.createElement('div');
+    el.className = 'float-number';
+    el.style.left = `${x}px`;
+    el.style.top = `${y}px`;
+    el.textContent = text;
+    document.body.appendChild(el);
+    setTimeout(() => el.remove(), 800);
+  }
+
   function updateHud() {
-    document.getElementById('val-food').textContent = Math.floor(state.food).toLocaleString();
-    document.getElementById('val-wood').textContent = Math.floor(state.wood).toLocaleString();
-    document.getElementById('val-stone').textContent = Math.floor(state.stone).toLocaleString();
-    document.getElementById('val-iron').textContent = Math.floor(state.iron).toLocaleString();
     document.getElementById('val-gold').textContent = Math.floor(state.gold).toLocaleString();
-    document.getElementById('val-gems').textContent = Math.floor(state.gems).toLocaleString();
-    document.getElementById('val-pop').textContent = `${state.immortals + state.archers}/60`;
+    document.getElementById('val-minerals').textContent = Math.floor(state.minerals).toLocaleString();
+    document.getElementById('val-chips').textContent = state.chips;
   }
 
-  setInterval(() => {
-    state.food += 3;
-    state.wood += 2;
-    state.stone += 1;
-    state.gold += 2;
-    updateHud();
-  }, 1000);
-
-  function trainUnits(type, count) {
-    const costFood = 120 * count;
-    const costGold = 40 * count;
-
-    if (state.food < costFood || state.gold < costGold) {
-      showToast('⚠️ Alimento ou Ouro insuficientes para recrutar tropas!');
-      return;
-    }
-
-    state.food -= costFood;
-    state.gold -= costGold;
-
-    if (type === 'IMMORTAL') {
-      state.immortals += count;
-      state.units.push({
-        id: `u_${Date.now()}`,
-        type: 'IMMORTAL',
-        name: 'Imortal Aquemênida',
-        gridX: 18,
-        gridY: 20,
-        startX: 10,
-        endX: 30,
-        dir: 1,
-        speed: 0.035,
-        hp: 320,
-        maxHp: 320,
-        attack: 28,
-        armor: 18,
-        portrait: 'portrait_immortal'
-      });
-    } else {
-      state.archers += count;
-      state.units.push({
-        id: `u_${Date.now()}`,
-        type: 'ARCHER',
-        name: 'Arqueiro de Susa',
-        gridX: 20,
-        gridY: 20,
-        startX: 12,
-        endX: 32,
-        dir: -1,
-        speed: 0.04,
-        hp: 180,
-        maxHp: 180,
-        attack: 22,
-        armor: 8,
-        portrait: 'portrait_archer'
-      });
-    }
-
-    closeModal('modal-train');
-    updateHud();
-    playAudioFanfare();
-    showToast(`⚔️ +${count} tropas imperiais incorporadas à Guarda!`);
-  }
-
-  function executePvEBattle(name, goldReward, stoneReward, gemsReward) {
-    closeModal('modal-battle');
-    state.gold += goldReward;
-    state.stone += stoneReward;
-    state.gems += gemsReward;
-    updateHud();
-    playAudioFanfare();
-    showToast(`🏆 Vitória esmagadora em "${name}"! Espólio: +${goldReward} Ouro, +${gemsReward} Gemas!`);
-  }
-
-  function executePvPBattle() {
-    const log = document.getElementById('battle-live-log');
-    log.style.display = 'block';
-    log.innerHTML = '⚡ [INÍCIO DA BATALHA DETERMINÍSTICA ASSÍNCRONA]<br>';
+  function launchRaid(target, goldReward, minReward, chipsBonus = 0) {
+    const box = document.getElementById('raid-live-box');
+    box.style.display = 'block';
+    box.innerHTML = `🚀 [LANÇANDO CÁPSULAS DE ASSALTO CONTRA ${target.toUpperCase()}]<br>`;
 
     setTimeout(() => {
-      log.innerHTML += '🏹 [T+3s] Imortais formam falange sob estandartes aquemênidas...<br>';
+      box.innerHTML += '💥 [T+3s] Canhões de plasma inimigos engajados! Tropas avançam...<br>';
     }, 400);
 
     setTimeout(() => {
-      log.innerHTML += '🔥 [T+9s] Torres inimigas destruídas por arqueiros persas. Baixas: -2 Imortais.<br>';
-    }, 1000);
+      box.innerHTML += '🔥 [T+8s] Extratores e Base Inimiga destruídos!<br>';
+      box.innerHTML += '<b style="color: #fde047;">⭐ ⭐ ⭐ 3 ESTRELAS (100% Destruição da Colônia)</b><br>';
+      box.innerHTML += `<span style="color: #38bdf8;">💰 Espólio Saqueado: +${goldReward.toLocaleString()} Moedas, +${minReward.toLocaleString()} Minerais!</span>`;
 
-    setTimeout(() => {
-      log.innerHTML += '💥 [T+18s] Centro Imperial adversário saqueado!<br>';
-      log.innerHTML += '<b style="color: #fde047;">⭐ ⭐ ⭐ 3 ESTRELAS (100% Destruição)</b><br>';
-      log.innerHTML += '<span style="color: #86efac;">💰 Saque: +3.400 Ouro, +4.100 Alimento</span>';
-
-      state.immortals = Math.max(0, state.immortals - 2);
-      state.gold += 3400;
-      state.food += 4100;
+      state.gold += goldReward;
+      state.minerals += minReward;
+      state.chips += chipsBonus;
       updateHud();
-      playAudioFanfare();
-      showToast('🏆 Vitória Imperial Esmagadora! Vila saqueada com 3 Estrelas!');
-    }, 1800);
+      playHarvestChime();
+      showToast(`🏆 Vitória Esmagadora em ${target}! 3 Estrelas!`);
+    }, 1600);
   }
 
-  function donateAlliance() {
-    if (state.immortals < 5) {
-      showToast('⚠️ Imortais insuficientes para reforço de aliança!');
-      return;
-    }
-    state.immortals -= 5;
-    updateHud();
-    playAudioTone(480, 0.2);
-    showToast('🛡️ 5 Imortais doados à Guarda de Persépolis! +50 Honra!');
-  }
-
-  function buyStore(gems) {
-    closeModal('modal-store');
-    state.gems += gems;
-    updateHud();
-    playAudioFanfare();
-    showToast(`💎 Tesouro creditado com sucesso! (+${gems} Gemas)`);
-  }
-
+  // Efeitos Sonoros Web Audio API (Juicy & Cartoon)
   let audioCtx = null;
   function getAudio() {
     if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
     return audioCtx;
   }
 
-  function playAudioTone(freq, dur) {
+  function playPopSound(freq = 440) {
     try {
       const ac = getAudio();
       const osc = ac.createOscillator();
       const gain = ac.createGain();
-      osc.type = 'triangle';
+      osc.type = 'sine';
       osc.frequency.setValueAtTime(freq, ac.currentTime);
-      gain.gain.setValueAtTime(0.12, ac.currentTime);
-      gain.gain.exponentialRampToValueAtTime(0.001, ac.currentTime + dur);
+      gain.gain.setValueAtTime(0.2, ac.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.001, ac.currentTime + 0.15);
       osc.connect(gain);
       gain.connect(ac.destination);
       osc.start();
-      osc.stop(ac.currentTime + dur);
+      osc.stop(ac.currentTime + 0.15);
     } catch (_) {}
   }
 
-  function playAudioFanfare() {
-    playAudioTone(440, 0.15);
-    setTimeout(() => playAudioTone(554, 0.15), 120);
-    setTimeout(() => playAudioTone(659, 0.3), 240);
+  function playHarvestChime() {
+    playPopSound(523.25); // C5
+    setTimeout(() => playPopSound(659.25), 100); // E5
+    setTimeout(() => playPopSound(783.99), 200); // G5
+    setTimeout(() => playPopSound(1046.50), 300); // C6
   }
 
   updateHud();
-  updateSelectionCard();
   render();
 </script>
 </body>

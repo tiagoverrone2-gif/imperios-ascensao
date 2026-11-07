@@ -1,0 +1,13 @@
+{
+  "name": "@imperios/web-client",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "wrangler pages dev public",
+    "build": "node build.js",
+    "deploy": "wrangler pages deploy public --project-name vilas-proton"
+  },
+  "devDependencies": {
+    "wrangler": "^3.99.0"
+  }
+}

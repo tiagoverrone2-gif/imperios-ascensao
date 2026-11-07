@@ -1,0 +1,32 @@
+{
+  "name": "imperios-ascensao-das-civilizacoes",
+  "version": "0.1.0",
+  "private": true,
+  "description": "IMPÉRIOS — Ascensão das Civilizações: Jogo MMO de estratégia histórica e construção de impérios",
+  "workspaces": [
+    "shared",
+    "server",
+    "client/web"
+  ],
+  "scripts": {
+    "dev:server": "npm --workspace=server run dev",
+    "dev:web": "npm --workspace=client/web run dev",
+    "build:shared": "npm --workspace=shared run build",
+    "build:server": "npm --workspace=server run build",
+    "build:web": "npm --workspace=client/web run build",
+    "build": "npm run build:shared && npm run build:server && npm run build:web",
+    "test": "npm --workspace=server run test",
+    "deploy:cloudflare": "npm --workspace=client/web run deploy"
+  },
+  "keywords": [
+    "game",
+    "rts",
+    "mmo",
+    "historical-strategy",
+    "persian-empire",
+    "cloudflare",
+    "unity"
+  ],
+  "author": "Equipe Multidisciplinar IMPÉRIOS",
+  "license": "UNLICENSED"
+}

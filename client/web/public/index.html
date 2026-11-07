@@ -1,0 +1,827 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>IMPÉRIOS — Ascensão das Civilizações (Império Persa)</title>
+  <style>
+    :root {
+      --bg-dark: #0d131a;
+      --persian-blue: #1d3557;
+      --persian-gold: #d4af37;
+      --persian-gold-light: #f3e5ab;
+      --persian-crimson: #a61c1c;
+      --persian-turquoise: #2a9d8f;
+      --panel-bg: rgba(18, 26, 36, 0.94);
+      --border-gold: #c59b27;
+      --text-main: #f0f3f6;
+      --text-muted: #9baec2;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      user-select: none;
+      -webkit-user-select: none;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
+
+    body, html {
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      background-color: var(--bg-dark);
+      color: var(--text-main);
+    }
+
+    #game-container {
+      position: relative;
+      width: 100vw;
+      height: 100vh;
+      overflow: hidden;
+    }
+
+    canvas#isometric-canvas {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      touch-action: none;
+    }
+
+    /* Top HUD */
+    .top-bar {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      background: linear-gradient(180deg, rgba(13, 19, 26, 0.96) 0%, rgba(13, 19, 26, 0.7) 80%, transparent 100%);
+      padding: 8px 16px;
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-between;
+      align-items: center;
+      gap: 10px;
+      z-index: 10;
+      border-bottom: 2px solid rgba(212, 175, 55, 0.4);
+    }
+
+    .civ-badge {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .civ-flag {
+      width: 36px;
+      height: 36px;
+      border-radius: 6px;
+      background: linear-gradient(135deg, var(--persian-crimson), var(--persian-gold));
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      font-weight: bold;
+      color: #fff;
+      border: 1px solid var(--border-gold);
+      box-shadow: 0 0 10px rgba(212, 175, 55, 0.3);
+    }
+
+    .civ-info h1 {
+      font-size: 15px;
+      color: var(--persian-gold-light);
+      letter-spacing: 0.5px;
+    }
+
+    .civ-info span {
+      font-size: 11px;
+      color: var(--text-muted);
+    }
+
+    .resources-bar {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+
+    .res-pill {
+      background: rgba(0, 0, 0, 0.5);
+      border: 1px solid rgba(212, 175, 55, 0.3);
+      border-radius: 16px;
+      padding: 4px 10px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 12px;
+      font-weight: 600;
+    }
+
+    .res-pill.gold { color: #f9d71c; }
+    .res-pill.food { color: #a3e635; }
+    .res-pill.wood { color: #fb923c; }
+    .res-pill.stone { color: #cbd5e1; }
+    .res-pill.iron { color: #93c5fd; }
+    .res-pill.gems { color: #38bdf8; }
+
+    /* Bottom Control Bar */
+    .bottom-bar {
+      position: absolute;
+      bottom: 12px;
+      left: 50%;
+      transform: translateX(-50%);
+      display: flex;
+      gap: 12px;
+      z-index: 10;
+      background: var(--panel-bg);
+      border: 1px solid var(--border-gold);
+      border-radius: 30px;
+      padding: 6px 14px;
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.7);
+    }
+
+    .btn-action {
+      background: linear-gradient(180deg, #2a4365, #1d3557);
+      color: #fff;
+      border: 1px solid var(--border-gold);
+      border-radius: 20px;
+      padding: 8px 16px;
+      font-size: 13px;
+      font-weight: bold;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      transition: all 0.2s ease;
+    }
+
+    .btn-action:hover {
+      background: linear-gradient(180deg, #3182ce, #2b6cb0);
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(212, 175, 55, 0.4);
+    }
+
+    .btn-action.battle {
+      background: linear-gradient(180deg, #c53030, #9b2c2c);
+      border-color: #f56565;
+    }
+
+    /* Modal Windows */
+    .modal-overlay {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.75);
+      backdrop-filter: blur(4px);
+      display: none;
+      justify-content: center;
+      align-items: center;
+      z-index: 100;
+    }
+
+    .modal-card {
+      background: var(--panel-bg);
+      border: 2px solid var(--border-gold);
+      border-radius: 12px;
+      width: 90%;
+      max-width: 520px;
+      max-height: 85vh;
+      display: flex;
+      flex-direction: column;
+      box-shadow: 0 10px 35px rgba(0, 0, 0, 0.9);
+      overflow: hidden;
+    }
+
+    .modal-header {
+      background: linear-gradient(90deg, #1d3557, #132238);
+      padding: 12px 16px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 1px solid var(--border-gold);
+    }
+
+    .modal-header h2 {
+      font-size: 16px;
+      color: var(--persian-gold-light);
+    }
+
+    .modal-close {
+      background: transparent;
+      border: none;
+      color: #fff;
+      font-size: 20px;
+      cursor: pointer;
+    }
+
+    .modal-body {
+      padding: 16px;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .building-item, .unit-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: rgba(255, 255, 255, 0.04);
+      border: 1px solid rgba(212, 175, 55, 0.2);
+      border-radius: 8px;
+      padding: 10px 14px;
+      transition: background 0.2s;
+    }
+
+    .building-item:hover, .unit-item:hover {
+      background: rgba(212, 175, 55, 0.08);
+    }
+
+    .item-title {
+      font-weight: bold;
+      color: #fff;
+      font-size: 14px;
+      margin-bottom: 2px;
+    }
+
+    .item-desc {
+      font-size: 11px;
+      color: var(--text-muted);
+    }
+
+    .item-cost {
+      font-size: 11px;
+      color: var(--persian-gold-light);
+      margin-top: 4px;
+    }
+
+    /* Notification banner */
+    .toast-banner {
+      position: absolute;
+      top: 70px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: rgba(13, 19, 26, 0.95);
+      border: 1px solid var(--border-gold);
+      border-radius: 8px;
+      padding: 10px 20px;
+      color: #fff;
+      font-size: 13px;
+      font-weight: 500;
+      z-index: 1000;
+      display: none;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.8);
+      text-align: center;
+    }
+
+    /* Status indicator */
+    .status-pill {
+      position: absolute;
+      bottom: 12px;
+      right: 16px;
+      background: rgba(0, 0, 0, 0.6);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      padding: 4px 10px;
+      border-radius: 12px;
+      font-size: 10px;
+      color: #86efac;
+      z-index: 5;
+    }
+  </style>
+</head>
+<body>
+
+<div id="game-container">
+  <!-- Top Bar HUD -->
+  <div class="top-bar">
+    <div class="civ-badge">
+      <div class="civ-flag">🏛️</div>
+      <div class="civ-info">
+        <h1>IMPÉRIO PERSA</h1>
+        <span>Era 1: Fundação • Sátrapa Ativo • 🛡️ Escudo 24h</span>
+      </div>
+    </div>
+
+    <div class="resources-bar">
+      <div class="res-pill food">🌾 <span id="val-food">1.000</span></div>
+      <div class="res-pill wood">🪵 <span id="val-wood">1.000</span></div>
+      <div class="res-pill stone">🪨 <span id="val-stone">800</span></div>
+      <div class="res-pill iron">⚙️ <span id="val-iron">500</span></div>
+      <div class="res-pill gold">🪙 <span id="val-gold">800</span></div>
+      <div class="res-pill gems">💎 <span id="val-gems">250</span></div>
+    </div>
+  </div>
+
+  <!-- Canvas Isométrico -->
+  <canvas id="isometric-canvas"></canvas>
+
+  <!-- Bottom Control Bar -->
+  <div class="bottom-bar">
+    <button class="btn-action" onclick="openBuildModal()">
+      <span>🔨</span> Construir
+    </button>
+    <button class="btn-action" onclick="openArmyModal()">
+      <span>⚔️</span> Quartel (<span id="army-count">15</span> Imortais)
+    </button>
+    <button class="btn-action battle" onclick="openBattleModal()">
+      <span>🔥</span> PvP Batalha
+    </button>
+  </div>
+
+  <div class="status-pill">
+    ● API Autoritativa Cloudflare Free: vilas.proton.ia.br
+  </div>
+
+  <div id="toast" class="toast-banner">Notificação</div>
+
+  <!-- Modal Construção -->
+  <div id="modal-build" class="modal-overlay">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h2>🏛️ Arquitetura Persa Aquemênida</h2>
+        <button class="modal-close" onclick="closeModal('modal-build')">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div class="building-item">
+          <div>
+            <div class="item-title">Fazenda com Canais Qanat</div>
+            <div class="item-desc">Irrigação ancestral persa por galerias subterrâneas.</div>
+            <div class="item-cost">Custo: 100 Madeira | +250 Alimento/hora</div>
+          </div>
+          <button class="btn-action" onclick="selectBuildingToPlace('FAZENDA', 100, 0)">Construir</button>
+        </div>
+
+        <div class="building-item">
+          <div>
+            <div class="item-title">Serraria de Cedro Real</div>
+            <div class="item-desc">Tratamento de toras para fortificações imperiais.</div>
+            <div class="item-cost">Custo: 80 Alimento, 50 Pedra | +200 Madeira/hora</div>
+          </div>
+          <button class="btn-action" onclick="selectBuildingToPlace('SERRARIA', 0, 50)">Construir</button>
+        </div>
+
+        <div class="building-item">
+          <div>
+            <div class="item-title">Torre de Arqueiros de Susa</div>
+            <div class="item-desc">Atiradores persas de longo alcance com flechas compostas.</div>
+            <div class="item-cost">Custo: 250 Madeira, 250 Pedra | Defesa 35 DPS</div>
+          </div>
+          <button class="btn-action" onclick="selectBuildingToPlace('TORRE_ARQUEIROS', 250, 250)">Construir</button>
+        </div>
+
+        <div class="building-item">
+          <div>
+            <div class="item-title">Armazém Imperial</div>
+            <div class="item-desc">Capacidade segura expandida de armazenamento de recursos.</div>
+            <div class="item-cost">Custo: 300 Madeira, 100 Pedra | +8.000 Capacidade</div>
+          </div>
+          <button class="btn-action" onclick="selectBuildingToPlace('ARMAZEM', 300, 100)">Construir</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal Tropas -->
+  <div id="modal-army" class="modal-overlay">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h2>⚔️ Guarda Imperial de Persépolis</h2>
+        <button class="modal-close" onclick="closeModal('modal-army')">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div class="unit-item">
+          <div>
+            <div class="item-title">Imortal Persa (Os Dez Mil)</div>
+            <div class="item-desc">Unidade única de elite com arco composto e lança com maçã de prata.</div>
+            <div class="item-cost">Custo: 120 Alimento, 60 Ferro, 40 Ouro</div>
+          </div>
+          <button class="btn-action" onclick="trainUnits('IMORTAL_PERSA', 5)">Recrutar +5</button>
+        </div>
+
+        <div class="unit-item">
+          <div>
+            <div class="item-title">Arqueiro de Pelotão</div>
+            <div class="item-desc">Chuva de flechas de apoio de alta cadência.</div>
+            <div class="item-cost">Custo: 40 Alimento, 70 Madeira</div>
+          </div>
+          <button class="btn-action" onclick="trainUnits('ARQUEIRO', 5)">Recrutar +5</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal Batalha PvP -->
+  <div id="modal-battle" class="modal-overlay">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h2>🔥 Batalha PvP Assíncrona</h2>
+        <button class="modal-close" onclick="closeModal('modal-battle')">&times;</button>
+      </div>
+      <div class="modal-body" id="battle-content">
+        <div style="background: rgba(255, 255, 255, 0.05); padding: 12px; border-radius: 8px; border: 1px solid var(--border-gold);">
+          <h3 style="color: var(--persian-gold); font-size: 15px; margin-bottom: 6px;">Alvo Encontrado: Posto Babilônico</h3>
+          <p style="font-size: 12px; color: var(--text-muted); margin-bottom: 8px;">Guarnição inimiga detectada pelo serviço de inteligência sátrapa.</p>
+          <div style="font-size: 12px; color: #a3e635; margin-bottom: 12px;">Saque Disponível Estimado: 🪙 1.500 Ouro | 🌾 2.400 Alimento</div>
+          <button class="btn-action battle" style="width: 100%; justify-content: center;" onclick="executePvPAttack()">
+            Iniciar Ataque com Guarda dos Dez Mil
+          </button>
+        </div>
+        <div id="battle-log" style="display: none; background: #000; padding: 10px; border-radius: 6px; font-family: monospace; font-size: 11px; max-height: 180px; overflow-y: auto;">
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  // Estado Econômico e da Vila
+  const state = {
+    food: 1000,
+    wood: 1000,
+    stone: 800,
+    iron: 500,
+    gold: 800,
+    gems: 250,
+    immortals: 15,
+    archers: 20,
+    buildings: [
+      { type: 'CENTRO_IMPERIAL', name: 'Apadana Imperial', gridX: 18, gridY: 18, w: 4, h: 4, color: '#d4af37' },
+      { type: 'FAZENDA', name: 'Fazenda Qanat', gridX: 13, gridY: 18, w: 3, h: 3, color: '#65a30d' },
+      { type: 'SERRARIA', name: 'Serraria Cedro', gridX: 24, gridY: 18, w: 3, h: 3, color: '#b45309' },
+      { type: 'QUARTEL', name: 'Quartel Imortais', gridX: 18, gridY: 24, w: 3, h: 3, color: '#dc2626' },
+      { type: 'TORRE_ARQUEIROS', name: 'Torre de Susa', gridX: 18, gridY: 14, w: 2, h: 2, color: '#2563eb' }
+    ],
+    patrollingUnits: [
+      { x: 17, y: 19, dir: 1, label: '🛡️ Imortal' },
+      { x: 20, y: 17, dir: -1, label: '🏹 Arqueiro' },
+      { x: 19, y: 22, dir: 1, label: '🛡️ Imortal' }
+    ],
+    placementMode: null,
+    camera: { x: 0, y: 0, zoom: 1.0, isDragging: false, lastX: 0, lastY: 0 }
+  };
+
+  // Canvas e Renderizador Isométrico
+  const canvas = document.getElementById('isometric-canvas');
+  const ctx = canvas.getContext('2d');
+
+  function resizeCanvas() {
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+    // Centraliza câmera inicialmente
+    if (state.camera.x === 0 && state.camera.y === 0) {
+      state.camera.x = canvas.width / 2;
+      state.camera.y = canvas.height / 2 - 80;
+    }
+  }
+  window.addEventListener('resize', resizeCanvas);
+  resizeCanvas();
+
+  // Matemática de Projeção Isométrica
+  const TILE_W = 64;
+  const TILE_H = 32;
+
+  function gridToScreen(gx, gy) {
+    const isoX = (gx - gy) * (TILE_W / 2) * state.camera.zoom + state.camera.x;
+    const isoY = (gx + gy) * (TILE_H / 2) * state.camera.zoom + state.camera.y;
+    return { x: isoX, y: isoY };
+  }
+
+  function screenToGrid(sx, sy) {
+    const adjX = (sx - state.camera.x) / state.camera.zoom;
+    const adjY = (sy - state.camera.y) / state.camera.zoom;
+    const halfW = TILE_W / 2;
+    const halfH = TILE_H / 2;
+    const gx = Math.floor((adjX / halfW + adjY / halfH) / 2);
+    const gy = Math.floor((adjY / halfH - adjX / halfW) / 2);
+    return { x: gx, y: gy };
+  }
+
+  // Loop de Renderização
+  function render() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+    // 1. Grade e Terreno Terrestre
+    const gridSize = 40;
+    for (let gx = 0; gx < gridSize; gx++) {
+      for (let gy = 0; gy < gridSize; gy++) {
+        const pos = gridToScreen(gx, gy);
+        const w = (TILE_W / 2) * state.camera.zoom;
+        const h = (TILE_H / 2) * state.camera.zoom;
+
+        // Otimização de Culling
+        if (pos.x < -100 || pos.x > canvas.width + 100 || pos.y < -100 || pos.y > canvas.height + 100) continue;
+
+        ctx.beginPath();
+        ctx.moveTo(pos.x, pos.y);
+        ctx.lineTo(pos.x + w, pos.y + h);
+        ctx.lineTo(pos.x, pos.y + h * 2);
+        ctx.lineTo(pos.x - w, pos.y + h);
+        ctx.closePath();
+
+        // Padrão de piso persa (arenito suave com relevos)
+        ctx.fillStyle = (gx + gy) % 2 === 0 ? '#222f3e' : '#1c2633';
+        ctx.fill();
+        ctx.strokeStyle = 'rgba(212, 175, 55, 0.08)';
+        ctx.lineWidth = 1;
+        ctx.stroke();
+      }
+    }
+
+    // 2. Edifícios Ordenados por Profundidade
+    const sortedBuildings = [...state.buildings].sort((a, b) => (a.gridX + a.gridY) - (b.gridX + b.gridY));
+
+    for (const bld of sortedBuildings) {
+      renderBuilding(bld);
+    }
+
+    // 3. Patrulhas e Soldados
+    for (const unit of state.patrollingUnits) {
+      unit.x += 0.01 * unit.dir;
+      if (unit.x > 22 || unit.x < 15) unit.dir *= -1;
+
+      const pos = gridToScreen(unit.x, unit.y);
+      ctx.fillStyle = '#f3e5ab';
+      ctx.font = '14px Arial';
+      ctx.fillText(unit.label, pos.x - 12, pos.y - 10);
+    }
+
+    // 4. Modo de Posicionamento (Holograma de construção)
+    if (state.placementMode) {
+      const mouseGrid = screenToGrid(canvas.width / 2, canvas.height / 2);
+      const pos = gridToScreen(mouseGrid.x, mouseGrid.y);
+      ctx.fillStyle = 'rgba(42, 157, 143, 0.5)';
+      ctx.strokeStyle = '#2a9d8f';
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.arc(pos.x, pos.y, 35 * state.camera.zoom, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.stroke();
+    }
+
+    requestAnimationFrame(render);
+  }
+
+  function renderBuilding(bld) {
+    const pos = gridToScreen(bld.gridX, bld.gridY);
+    const z = state.camera.zoom;
+
+    ctx.save();
+    ctx.translate(pos.x, pos.y);
+
+    if (bld.type === 'CENTRO_IMPERIAL') {
+      // Apadana Persa Monumental
+      ctx.fillStyle = '#8c7851';
+      ctx.fillRect(-45 * z, -50 * z, 90 * z, 50 * z);
+
+      // Cúpula / Teto Ouro
+      ctx.fillStyle = '#d4af37';
+      ctx.beginPath();
+      ctx.arc(0, -50 * z, 30 * z, Math.PI, 0);
+      ctx.fill();
+
+      // Colunas Aquemênidas
+      ctx.fillStyle = '#f3e5ab';
+      ctx.fillRect(-35 * z, -48 * z, 8 * z, 48 * z);
+      ctx.fillRect(-10 * z, -48 * z, 8 * z, 48 * z);
+      ctx.fillRect(15 * z, -48 * z, 8 * z, 48 * z);
+
+      ctx.fillStyle = '#fff';
+      ctx.font = `${Math.floor(11 * z)}px sans-serif`;
+      ctx.textAlign = 'center';
+      ctx.fillText('🏛️ APADANA', 0, -60 * z);
+    } else if (bld.type === 'FAZENDA') {
+      ctx.fillStyle = '#1e3a1f';
+      ctx.fillRect(-30 * z, -25 * z, 60 * z, 30 * z);
+      ctx.fillStyle = '#84cc16';
+      ctx.fillText('🌾 Qanat', 0, -10 * z);
+    } else if (bld.type === 'SERRARIA') {
+      ctx.fillStyle = '#451a03';
+      ctx.fillRect(-28 * z, -25 * z, 56 * z, 30 * z);
+      ctx.fillStyle = '#fb923c';
+      ctx.fillText('🪵 Cedro', 0, -10 * z);
+    } else if (bld.type === 'QUARTEL') {
+      ctx.fillStyle = '#7f1d1d';
+      ctx.fillRect(-32 * z, -30 * z, 64 * z, 35 * z);
+      ctx.fillStyle = '#fca5a5';
+      ctx.fillText('⚔️ Quartel', 0, -12 * z);
+    } else if (bld.type === 'TORRE_ARQUEIROS') {
+      ctx.fillStyle = '#1e3a8a';
+      ctx.fillRect(-16 * z, -45 * z, 32 * z, 45 * z);
+      ctx.fillStyle = '#93c5fd';
+      ctx.fillText('🏹 Torre', 0, -50 * z);
+    } else {
+      ctx.fillStyle = '#374151';
+      ctx.fillRect(-25 * z, -25 * z, 50 * z, 30 * z);
+      ctx.fillStyle = '#e5e7eb';
+      ctx.fillText(bld.name, 0, -10 * z);
+    }
+
+    ctx.restore();
+  }
+
+  // Interação de Toque e Mouse
+  canvas.addEventListener('mousedown', (e) => {
+    state.camera.isDragging = true;
+    state.camera.lastX = e.clientX;
+    state.camera.lastY = e.clientY;
+  });
+
+  window.addEventListener('mousemove', (e) => {
+    if (!state.camera.isDragging) return;
+    const dx = e.clientX - state.camera.lastX;
+    const dy = e.clientY - state.camera.lastY;
+    state.camera.x += dx;
+    state.camera.y += dy;
+    state.camera.lastX = e.clientX;
+    state.camera.lastY = e.clientY;
+  });
+
+  window.addEventListener('mouseup', () => { state.camera.isDragging = false; });
+
+  canvas.addEventListener('wheel', (e) => {
+    e.preventDefault();
+    const zoomFactor = e.deltaY < 0 ? 1.1 : 0.9;
+    state.camera.zoom = Math.max(0.6, Math.min(2.5, state.camera.zoom * zoomFactor));
+  }, { passive: false });
+
+  // Touch Support
+  let touchStartDist = 0;
+  canvas.addEventListener('touchstart', (e) => {
+    if (e.touches.length === 1) {
+      state.camera.isDragging = true;
+      state.camera.lastX = e.touches[0].clientX;
+      state.camera.lastY = e.touches[0].clientY;
+    } else if (e.touches.length === 2) {
+      touchStartDist = Math.hypot(
+        e.touches[0].clientX - e.touches[1].clientX,
+        e.touches[0].clientY - e.touches[1].clientY
+      );
+    }
+  });
+
+  canvas.addEventListener('touchmove', (e) => {
+    if (e.touches.length === 1 && state.camera.isDragging) {
+      const dx = e.touches[0].clientX - state.camera.lastX;
+      const dy = e.touches[0].clientY - state.camera.lastY;
+      state.camera.x += dx;
+      state.camera.y += dy;
+      state.camera.lastX = e.touches[0].clientX;
+      state.camera.lastY = e.touches[0].clientY;
+    } else if (e.touches.length === 2) {
+      const dist = Math.hypot(
+        e.touches[0].clientX - e.touches[1].clientX,
+        e.touches[0].clientY - e.touches[1].clientY
+      );
+      const factor = dist / touchStartDist;
+      state.camera.zoom = Math.max(0.6, Math.min(2.5, state.camera.zoom * factor));
+      touchStartDist = dist;
+    }
+  });
+
+  canvas.addEventListener('touchend', () => { state.camera.isDragging = false; });
+
+  // Economia Offline em Tempo Real no Cliente
+  setInterval(() => {
+    state.food += 3;
+    state.wood += 2;
+    state.stone += 1;
+    state.gold += 2;
+    updateHud();
+  }, 1000);
+
+  function updateHud() {
+    document.getElementById('val-food').textContent = Math.floor(state.food).toLocaleString();
+    document.getElementById('val-wood').textContent = Math.floor(state.wood).toLocaleString();
+    document.getElementById('val-stone').textContent = Math.floor(state.stone).toLocaleString();
+    document.getElementById('val-iron').textContent = Math.floor(state.iron).toLocaleString();
+    document.getElementById('val-gold').textContent = Math.floor(state.gold).toLocaleString();
+    document.getElementById('val-gems').textContent = Math.floor(state.gems).toLocaleString();
+    document.getElementById('army-count').textContent = state.immortals;
+  }
+
+  // Modais
+  function openBuildModal() { document.getElementById('modal-build').style.display = 'flex'; }
+  function openArmyModal() { document.getElementById('modal-army').style.display = 'flex'; }
+  function openBattleModal() { document.getElementById('modal-battle').style.display = 'flex'; }
+  function closeModal(id) { document.getElementById(id).style.display = 'none'; }
+
+  function showToast(msg) {
+    const toast = document.getElementById('toast');
+    toast.textContent = msg;
+    toast.style.display = 'block';
+    setTimeout(() => { toast.style.display = 'none'; }, 3500);
+  }
+
+  // Ações do Jogo
+  function selectBuildingToPlace(type, woodCost, stoneCost) {
+    if (state.wood < woodCost || state.stone < stoneCost) {
+      showToast('⚠️ Recursos insuficientes para erguer este monumento!');
+      return;
+    }
+
+    state.wood -= woodCost;
+    state.stone -= stoneCost;
+
+    // Posiciona próximo ao complexo central
+    const newX = 14 + Math.floor(Math.random() * 12);
+    const newY = 14 + Math.floor(Math.random() * 12);
+
+    state.buildings.push({
+      type,
+      name: type,
+      gridX: newX,
+      gridY: newY,
+      w: 3,
+      h: 3
+    });
+
+    closeModal('modal-build');
+    updateHud();
+    playAudioBeep(440, 0.2);
+    showToast(`🏛️ ${type} construído em (${newX}, ${newY})!`);
+  }
+
+  function trainUnits(type, count) {
+    const costFood = 120 * count;
+    const costGold = 40 * count;
+
+    if (state.food < costFood || state.gold < costGold) {
+      showToast('⚠️ Ouro ou Alimento insuficientes para o recrutamento dos Imortais!');
+      return;
+    }
+
+    state.food -= costFood;
+    state.gold -= costGold;
+    state.immortals += count;
+
+    closeModal('modal-army');
+    updateHud();
+    playAudioBeep(520, 0.3);
+    showToast(`⚔️ ${count} Novos Imortais juraram lealdade ao Grande Rei!`);
+  }
+
+  function executePvPAttack() {
+    const log = document.getElementById('battle-log');
+    log.style.display = 'block';
+    log.innerHTML = '⚡ [INÍCIO DO COMBATE DETERMINÍSTICO ASSÍNCRONO]<br>';
+
+    setTimeout(() => {
+      log.innerHTML += '🏹 [T+5s] Imortais Persas avançam em formação com escudos entrelaçados...<br>';
+    }, 500);
+
+    setTimeout(() => {
+      log.innerHTML += '🔥 [T+15s] Torres inimigas disparam! Imortais persas sustentam o impacto com baixas mínimas (-2 Imortais).<br>';
+    }, 1200);
+
+    setTimeout(() => {
+      log.innerHTML += '💥 [T+28s] Centro Imperial rival destruído! Vitória Esmagadora!<br>';
+      log.innerHTML += '<b style="color: #f9d71c;">⭐ ⭐ ⭐ 3 ESTRELAS (100% Destruição)</b><br>';
+      log.innerHTML += '<span style="color: #a3e635;">💰 Saque Creditado: +1.200 Ouro, +1.800 Alimento</span>';
+
+      state.immortals = Math.max(0, state.immortals - 2);
+      state.gold += 1200;
+      state.food += 1800;
+      updateHud();
+      playAudioFanfare();
+      showToast('🏆 Vitória Esmagadora de Persépolis! 3 Estrelas conquistadas!');
+    }, 2000);
+  }
+
+  // Síntese de Áudio WebAudio API
+  let audioCtx = null;
+  function getAudioCtx() {
+    if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    return audioCtx;
+  }
+
+  function playAudioBeep(freq, duration) {
+    try {
+      const ac = getAudioCtx();
+      const osc = ac.createOscillator();
+      const gain = ac.createGain();
+      osc.type = 'triangle';
+      osc.frequency.setValueAtTime(freq, ac.currentTime);
+      gain.gain.setValueAtTime(0.15, ac.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.001, ac.currentTime + duration);
+      osc.connect(gain);
+      gain.connect(ac.destination);
+      osc.start();
+      osc.stop(ac.currentTime + duration);
+    } catch (_) {}
+  }
+
+  function playAudioFanfare() {
+    playAudioBeep(440, 0.2);
+    setTimeout(() => playAudioBeep(554, 0.2), 150);
+    setTimeout(() => playAudioBeep(659, 0.4), 300);
+  }
+
+  // Inicialização
+  updateHud();
+  render();
+</script>
+</body>
+</html>

@@ -1,0 +1,57 @@
+name: IMPÉRIOS CI/CD Pipeline
+
+on:
+  push:
+    branches: [ main, master ]
+  pull_request:
+    branches: [ main, master ]
+
+jobs:
+  test-and-build:
+    name: Test and Build Vertical Slice
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Código-Fonte
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+
+      - name: Instalar Dependências e Compilar Shared
+        run: |
+          cd shared
+          npm ci || npm install
+          npm run build
+
+      - name: Instalar Dependências e Executar Testes Automatizados (Vitest)
+        run: |
+          cd ../server
+          npm ci || npm install
+          npm test
+
+      - name: Build Web Client (Playable Slice)
+        run: |
+          cd ../client/web
+          npm ci || npm install
+          npm run build
+
+  deploy-cloudflare:
+    name: Deploy to Cloudflare Pages (vilas.proton.ia.br)
+    needs: test-and-build
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Código-Fonte
+        uses: actions/checkout@v4
+
+      - name: Deploy to Cloudflare Pages
+        uses: cloudflare/wrangler-action@v3
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: '6a12a0bcaa802b980106ef03c05eb629'
+          command: pages deploy client/web/public --project-name vilas-proton --branch main

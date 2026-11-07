@@ -1,0 +1,370 @@
+// IMPÉRIOS — Ascensão das Civilizações
+// Prisma Schema - Banco de Dados Relacional Autoritativo (PostgreSQL / SQLite)
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite" // sqlite padrão para desenvolvimento local e testes imediatos; alternável para postgresql via DATABASE_URL
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id            String         @id @default(uuid())
+  deviceId      String?        @unique
+  email         String?        @unique
+  passwordHash  String?
+  role          String         @default("PLAYER") // PLAYER, MODERATOR, ADMIN
+  isBanned      Boolean        @default(false)
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+
+  profile       PlayerProfile?
+  villages      Village[]
+  purchases     Purchase[]
+  auditLogs     AuditLog[]
+  notifications Notification[]
+
+  @@index([deviceId])
+  @@index([email])
+}
+
+model PlayerProfile {
+  id             String    @id @default(uuid())
+  userId         String    @unique
+  user           User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  displayName    String
+  avatarUrl      String?
+  trophies       Int       @default(0)
+  experience     Int       @default(0)
+  level          Int       @default(1)
+  gems           Int       @default(250) // Moeda premium inicial
+  allianceId     String?
+  alliance       Alliance? @relation(fields: [allianceId], references: [id])
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+
+  allianceMembers AllianceMember[]
+  inventory      PlayerInventory[]
+  entitlements   Entitlement[]
+
+  @@index([trophies])
+}
+
+model Civilization {
+  id                  String   @id // ex: 'persa', 'romano'
+  name                String
+  historicalPeriod    String
+  architecturalStyle  String
+  primaryColor        String
+  secondaryColor      String
+  description         String
+  bonusConfig         String   // JSON com bônus econômicos e militares
+  isActive            Boolean  @default(true)
+  createdAt           DateTime @default(now())
+
+  villages            Village[]
+}
+
+model Village {
+  id              String         @id @default(uuid())
+  userId          String
+  user            User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  civilizationId  String
+  civilization    Civilization   @relation(fields: [civilizationId], references: [id])
+  name            String
+  era             Int            @default(1) // 1 a 6
+  imperialCenterLvl Int          @default(1)
+  gridWidth       Int            @default(40)
+  gridHeight      Int            @default(40)
+  createdAt       DateTime       @default(now())
+  updatedAt       DateTime       @updatedAt
+
+  buildings       VillageBuilding[]
+  resourceBalance ResourceBalance?
+  transactions    ResourceTransaction[]
+  playerUnits     PlayerUnit[]
+  trainingQueues  TrainingQueue[]
+  playerResearch  PlayerResearch[]
+  shields         Shield[]
+  attackSessions  BattleSession[] @relation("AttackerVillage")
+  defendSessions  BattleSession[] @relation("DefenderVillage")
+
+  @@index([userId])
+  @@index([civilizationId])
+}
+
+model BuildingDefinition {
+  id              String   @id // ex: 'CENTRO_IMPERIAL', 'FAZENDA'
+  type            String
+  name            String
+  description     String
+  width           Int
+  height          Int
+  maxLevel        Int
+  costConfigJson  String   // JSON contendo custos e tempos por nível
+  statsConfigJson String   // JSON contendo vida, produção e armazenamento por nível
+
+  villageBuildings VillageBuilding[]
+}
+
+model VillageBuilding {
+  id                   String             @id @default(uuid())
+  villageId            String
+  village              Village            @relation(fields: [villageId], references: [id], onDelete: Cascade)
+  buildingDefinitionId String
+  definition           BuildingDefinition @relation(fields: [buildingDefinitionId], references: [id])
+  level                Int                @default(1)
+  gridX                Int
+  gridY                Int
+  currentHealth        Int
+  maxHealth            Int
+  state                String             @default("OPERATIONAL") // CONSTRUCTING, UPGRADING, OPERATIONAL, DAMAGED
+  upgradeFinishedAt    DateTime?
+  createdAt            DateTime           @default(now())
+  updatedAt            DateTime           @updatedAt
+
+  @@index([villageId])
+  @@index([gridX, gridY])
+}
+
+model ResourceBalance {
+  id                String   @id @default(uuid())
+  villageId         String   @unique
+  village           Village  @relation(fields: [villageId], references: [id], onDelete: Cascade)
+  alimento          BigInt   @default(1000)
+  madeira           BigInt   @default(1000)
+  pedra             BigInt   @default(800)
+  ferro             BigInt   @default(400)
+  ouro              BigInt   @default(500)
+  lastCalculatedAt  DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+}
+
+model ResourceTransaction {
+  id              String   @id @default(uuid())
+  villageId       String
+  village         Village  @relation(fields: [villageId], references: [id], onDelete: Cascade)
+  resourceType    String   // alimento, madeira, pedra, ferro, ouro, gemas
+  delta           BigInt   // positivo ou negativo
+  balanceAfter    BigInt
+  transactionType String   // COLLECTION, BUILDING_UPGRADE, etc
+  referenceId     String?
+  createdAt       DateTime @default(now())
+
+  @@index([villageId, createdAt])
+}
+
+model UnitDefinition {
+  id                  String   @id // ex: 'IMORTAL_PERSA', 'ARQUEIRO'
+  name                String
+  category            String
+  housingSpace        Int
+  statsJson           String   // vida, dano, alcance, velocidade, bônus
+  costJson            String   // custos e tempo de treino
+
+  playerUnits         PlayerUnit[]
+  trainingQueues      TrainingQueue[]
+}
+
+model PlayerUnit {
+  id               String         @id @default(uuid())
+  villageId        String
+  village          Village        @relation(fields: [villageId], references: [id], onDelete: Cascade)
+  unitDefinitionId String
+  definition       UnitDefinition @relation(fields: [unitDefinitionId], references: [id])
+  quantity         Int            @default(0)
+  updatedAt        DateTime       @updatedAt
+
+  @@unique([villageId, unitDefinitionId])
+}
+
+model TrainingQueue {
+  id               String         @id @default(uuid())
+  villageId        String
+  village          Village        @relation(fields: [villageId], references: [id], onDelete: Cascade)
+  unitDefinitionId String
+  definition       UnitDefinition @relation(fields: [unitDefinitionId], references: [id])
+  quantity         Int
+  finishedAt       DateTime
+  createdAt        DateTime       @default(now())
+
+  @@index([villageId])
+}
+
+model ResearchDefinition {
+  id            String   @id // ex: 'METALURGIA_1'
+  name          String
+  eraRequired   Int
+  costJson      String
+  effectsJson   String
+
+  playerResearch PlayerResearch[]
+}
+
+model PlayerResearch {
+  id                   String             @id @default(uuid())
+  villageId            String
+  village              Village            @relation(fields: [villageId], references: [id], onDelete: Cascade)
+  researchDefinitionId String
+  definition           ResearchDefinition @relation(fields: [researchDefinitionId], references: [id])
+  level                Int                @default(1)
+  isCompleted          Boolean            @default(false)
+  completedAt          DateTime?
+
+  @@unique([villageId, researchDefinitionId])
+}
+
+model BattleSession {
+  id                 String         @id @default(uuid())
+  attackerVillageId  String
+  attackerVillage    Village        @relation("AttackerVillage", fields: [attackerVillageId], references: [id])
+  defenderVillageId  String
+  defenderVillage    Village        @relation("DefenderVillage", fields: [defenderVillageId], references: [id])
+  status             String         @default("PENDING") // PENDING, SIMULATED, REPLAY_VIEWED
+  deployedUnitsJson  String         // JSON do exército enviado
+  snapshotJson       String         // Snapshot defensivo no momento do ataque
+  createdAt          DateTime       @default(now())
+
+  events             BattleEvent[]
+  result             BattleResult?
+
+  @@index([attackerVillageId])
+  @@index([defenderVillageId])
+}
+
+model BattleEvent {
+  id              String        @id @default(uuid())
+  battleSessionId String
+  battleSession   BattleSession @relation(fields: [battleSessionId], references: [id], onDelete: Cascade)
+  timestampSec    Float
+  eventType       String
+  eventPayload    String        // JSON detalhado do evento determinístico
+  createdAt       DateTime      @default(now())
+
+  @@index([battleSessionId])
+}
+
+model BattleResult {
+  id                String        @id @default(uuid())
+  battleSessionId   String        @unique
+  battleSession     BattleSession @relation(fields: [battleSessionId], references: [id], onDelete: Cascade)
+  stars             Int           @default(0) // 0 a 3
+  destructionPct    Float         @default(0.0)
+  isAttackerVictory Boolean       @default(false)
+  lootPlunderedJson String        // Recursos saqueados
+  lossesJson        String        // Baixas sofridas
+  createdAt         DateTime      @default(now())
+}
+
+model Shield {
+  id          String   @id @default(uuid())
+  villageId   String
+  village     Village  @relation(fields: [villageId], references: [id], onDelete: Cascade)
+  type        String   // INICIANTE, DERROTA_PVP, COMPRA_PREMIUM
+  expiresAt   DateTime
+  createdAt   DateTime @default(now())
+
+  @@index([villageId, expiresAt])
+}
+
+model Alliance {
+  id          String   @id @default(uuid())
+  name        String   @unique
+  tag         String   @unique
+  description String?
+  badgeIcon   String?
+  totalPoints Int      @default(0)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  members     AllianceMember[]
+  profiles    PlayerProfile[]
+}
+
+model AllianceMember {
+  id          String        @id @default(uuid())
+  allianceId  String
+  alliance    Alliance      @relation(fields: [allianceId], references: [id], onDelete: Cascade)
+  profileId   String
+  profile     PlayerProfile @relation(fields: [profileId], references: [id], onDelete: Cascade)
+  role        String        @default("MEMBER") // LEADER, ELDER, MEMBER
+  joinedAt    DateTime      @default(now())
+
+  @@unique([allianceId, profileId])
+}
+
+model StoreProduct {
+  id          String   @id
+  sku         String   @unique
+  name        String
+  priceCents  Int
+  currency    String   @default("BRL")
+  rewardJson  String   // ex: { "gemas": 500, "escudoHoras": 24 }
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+
+  purchases   Purchase[]
+}
+
+model Purchase {
+  id              String       @id @default(uuid())
+  userId          String
+  user            User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  productId       String
+  product         StoreProduct @relation(fields: [productId], references: [id])
+  paymentProvider String       // GOOGLE_PLAY, APPLE_PAY, CLOUDFLARE
+  receiptToken    String       @unique
+  status          String       @default("COMPLETED") // PENDING, COMPLETED, REFUNDED
+  createdAt       DateTime     @default(now())
+
+  @@index([userId])
+}
+
+model Entitlement {
+  id          String        @id @default(uuid())
+  profileId   String
+  profile     PlayerProfile @relation(fields: [profileId], references: [id], onDelete: Cascade)
+  key         String        // ex: "extra_builder_queue", "persian_golden_skin"
+  expiresAt   DateTime?
+  createdAt   DateTime      @default(now())
+
+  @@unique([profileId, key])
+}
+
+model PlayerInventory {
+  id          String        @id @default(uuid())
+  profileId   String
+  profile     PlayerProfile @relation(fields: [profileId], references: [id], onDelete: Cascade)
+  itemId      String
+  quantity    Int           @default(1)
+  updatedAt   DateTime      @updatedAt
+
+  @@unique([profileId, itemId])
+}
+
+model Notification {
+  id        String   @id @default(uuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  title     String
+  message   String
+  read      Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  @@index([userId, read])
+}
+
+model AuditLog {
+  id          String   @id @default(uuid())
+  userId      String?
+  user        User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+  action      String   // BAN_USER, ADMIN_GEMS_GRANT, BALANCE_CHANGE
+  targetId    String?
+  detailsJson String?
+  ipAddress   String?
+  createdAt   DateTime @default(now())
+
+  @@index([action, createdAt])
+}
